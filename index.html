@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Consulta de Turnos UPC - Universal</title>
+    <title>Consulta de Turnos UPC - Verano 2026</title>
     <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
     
     <style>
@@ -25,7 +25,6 @@
             min-height: 100vh;
         }
 
-        /* Header */
         header {
             background-color: white;
             border-bottom: 4px solid var(--upc-red);
@@ -48,7 +47,6 @@
             color: var(--upc-dark);
         }
 
-        /* Main Container */
         .container {
             max-width: 800px;
             margin: 2rem auto;
@@ -56,7 +54,7 @@
             flex: 1;
         }
 
-        /* Upload Section con Drag & Drop */
+        /* Upload Section */
         .upload-section {
             background: white;
             padding: 3rem 2rem;
@@ -74,13 +72,6 @@
             transform: scale(1.01);
         }
 
-        .file-input-wrapper {
-            position: relative;
-            overflow: hidden;
-            display: inline-block;
-            margin-top: 1rem;
-        }
-
         .btn-upload {
             border: 2px solid var(--upc-red);
             color: var(--upc-red);
@@ -90,6 +81,7 @@
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s ease;
+            margin-top: 10px;
         }
 
         .btn-upload:hover {
@@ -98,14 +90,7 @@
         }
 
         input[type=file] {
-            font-size: 100px;
-            position: absolute;
-            left: 0;
-            top: 0;
-            opacity: 0;
-            cursor: pointer;
-            width: 100%;
-            height: 100%;
+            display: none;
         }
 
         #file-name {
@@ -121,10 +106,6 @@
             color: #ccc;
             margin-bottom: 1rem;
             display: block;
-        }
-        
-        .upload-section.drag-over .icon-upload {
-            color: var(--upc-red);
         }
 
         /* Search Section */
@@ -178,18 +159,14 @@
             background-color: #c40510;
         }
 
-        /* Results Section */
-        #result-container {
-            margin-top: 2rem;
-        }
-
+        /* Results */
         .result-card {
             background: white;
             border-left: 5px solid var(--upc-red);
             border-radius: 4px;
             padding: 1.5rem;
             box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-            margin-bottom: 1rem;
+            margin-top: 2rem;
             animation: slideUp 0.4s ease;
         }
 
@@ -209,9 +186,7 @@
         }
 
         @media (max-width: 600px) {
-            .info-grid {
-                grid-template-columns: 1fr;
-            }
+            .info-grid { grid-template-columns: 1fr; }
         }
 
         .info-block {
@@ -277,24 +252,21 @@
 </header>
 
 <div class="container">
-    <div class="upload-section" id="drop-zone">
+    <div class="upload-section" id="drop-zone" onclick="document.getElementById('file-input').click()">
         <div class="icon-upload">📊</div>
         <h2>Cargar Base de Datos</h2>
-        <p style="margin-bottom: 1.5rem; color: #666;">
-            Arrastra tu archivo <strong>Excel (.xlsx, .xls)</strong> o <strong>CSV</strong> aquí.
+        <p style="margin-bottom: 1rem; color: #666;">
+            Arrastra el archivo <strong>.csv</strong> o <strong>.xlsx</strong> aquí.
         </p>
-        
-        <div class="file-input-wrapper">
-            <button class="btn-upload">Seleccionar Archivo</button>
-            <input type="file" id="file-input" accept=".csv, .xlsx, .xls">
-        </div>
+        <button class="btn-upload">Seleccionar Archivo</button>
+        <input type="file" id="file-input" accept=".csv, .xlsx, .xls">
         <div id="file-name"></div>
     </div>
 
     <div class="search-section" id="search-step">
         <h2>Consultar Estudiante</h2>
         <div class="search-box">
-            <input type="text" id="student-code" placeholder="Ingrese Código (ej. N00123456)" maxlength="20">
+            <input type="text" id="student-code" placeholder="Código (ej. U20241D915 o N00...)" maxlength="20">
             <button class="btn-search" onclick="searchStudent()">Buscar</button>
         </div>
         <div id="result-container"></div>
@@ -303,7 +275,7 @@
 </div>
 
 <footer>
-    Sistema de Consulta de Turnos - V4.0 Universal (Excel/CSV)
+    Sistema de Consulta de Turnos - V5.0 (Soporte Código Sócrates)
 </footer>
 
 <script>
@@ -311,12 +283,13 @@
     const dropZone = document.getElementById('drop-zone');
     const fileInput = document.getElementById('file-input');
 
-    // --- Drag & Drop ---
+    // Drag & Drop Handlers
     ;['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-        dropZone.addEventListener(eventName, preventDefaults, false);
+        dropZone.addEventListener(eventName, e => {
+            e.preventDefault();
+            e.stopPropagation();
+        }, false);
     });
-
-    function preventDefaults(e) { e.preventDefault(); e.stopPropagation(); }
 
     ;['dragenter', 'dragover'].forEach(eventName => {
         dropZone.addEventListener(eventName, () => dropZone.classList.add('drag-over'), false);
@@ -326,166 +299,152 @@
         dropZone.addEventListener(eventName, () => dropZone.classList.remove('drag-over'), false);
     });
 
-    dropZone.addEventListener('drop', handleDrop, false);
-
-    function handleDrop(e) {
+    dropZone.addEventListener('drop', e => {
         const dt = e.dataTransfer;
-        const files = dt.files;
-        if(files.length > 0) handleFiles(files[0]);
-    }
+        if(dt.files.length > 0) handleFiles(dt.files[0]);
+    }, false);
 
     fileInput.addEventListener('change', function(e) {
         if(this.files[0]) handleFiles(this.files[0]);
     });
 
-    // --- MANEJO DE ARCHIVOS INTELIGENTE ---
     function handleFiles(file) {
-        const fileName = file.name.toLowerCase();
-        const isExcel = fileName.endsWith('.xlsx') || fileName.endsWith('.xls');
-        const isCsv = fileName.endsWith('.csv');
-
-        if (!isExcel && !isCsv) {
-            alert("Por favor, sube un archivo válido (.xlsx, .xls o .csv)");
-            return;
-        }
-
         document.getElementById('file-name').textContent = "Procesando: " + file.name + "...";
-        document.getElementById('file-name').style.color = '#666';
-
-        // Si es Excel
-        if (isExcel) {
+        
+        const fileName = file.name.toLowerCase();
+        if (fileName.endsWith('.xlsx') || fileName.endsWith('.xls')) {
             const reader = new FileReader();
             reader.onload = function(e) {
-                const data = new Uint8Array(e.target.result);
                 try {
+                    const data = new Uint8Array(e.target.result);
                     const workbook = XLSX.read(data, {type: 'array'});
-                    // Leer la primera hoja
-                    const firstSheetName = workbook.SheetNames[0];
-                    const worksheet = workbook.Sheets[firstSheetName];
-                    
-                    // Convertir la hoja a CSV (texto) para reusar nuestra lógica robusta
+                    const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+                    // Leer como CSV para mantener lógica consistente
                     const csvOutput = XLSX.utils.sheet_to_csv(worksheet);
-                    processCSV(csvOutput, "Excel");
-                } catch (error) {
-                    console.error(error);
-                    alert("Error al leer el archivo Excel. Asegúrate de que no esté corrupto.");
+                    processData(csvOutput);
+                } catch (err) {
+                    alert("Error leyendo Excel: " + err);
                 }
             };
             reader.readAsArrayBuffer(file);
-        } 
-        // Si es CSV
-        else {
+        } else {
             const reader = new FileReader();
-            reader.onload = function(e) {
-                processCSV(e.target.result, "CSV");
-            };
+            reader.onload = function(e) { processData(e.target.result); };
             reader.readAsText(file, "UTF-8");
         }
     }
 
-    // --- Helper Strings ---
     function cleanStr(str) {
-        if (!str) return '';
-        return str.trim().replace(/^"|"$/g, '').trim();
+        return str ? str.trim().replace(/^"|"$/g, '').trim() : '';
     }
 
-    // --- PROCESAMIENTO UNIFICADO ---
-    function processCSV(csvText, type) {
+    function processData(csvText) {
         const lines = csvText.split(/\r\n|\n/);
-        
         let headerIndex = -1;
+        let separator = ',';
         let headers = [];
-        let separator = ','; 
-        
+
         // 1. Detectar Cabecera y Separador
+        // Buscamos "Código Banner" para identificar la fila real de títulos
         for(let i=0; i < Math.min(50, lines.length); i++) {
             const line = lines[i];
-            const normLine = line.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+            // Normalizar para ignorar mayus/minus/tildes en la detección
+            const norm = line.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
             
-            if(normLine.includes('codigo banner')) {
+            if(norm.includes('codigo banner')) {
                 headerIndex = i;
-                const countComma = (line.match(/,/g) || []).length;
-                const countSemi = (line.match(/;/g) || []).length;
-                separator = (countSemi > countComma) ? ';' : ',';
-                headers = line.split(separator).map(h => cleanStr(h));
+                const commas = (line.match(/,/g) || []).length;
+                const semis = (line.match(/;/g) || []).length;
+                separator = semis > commas ? ';' : ',';
+                headers = line.split(separator).map(cleanStr);
                 break;
             }
         }
 
         if (headerIndex === -1) {
-            alert("Error: No se encontró la columna 'Código Banner'. Verifique el archivo.");
-            document.getElementById('file-name').textContent = "Error: Estructura de archivo incorrecta.";
-            document.getElementById('file-name').style.color = 'var(--upc-red)';
+            alert("No se encontró la columna 'Código Banner'. Verifique el archivo.");
             return;
         }
 
-        // 2. Mapear Índices
-        const findIdx = (name) => headers.findIndex(h => 
-            h.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").includes(name.toLowerCase())
+        // 2. Mapear Indices (Búsqueda estricta)
+        const findIdx = (keyword) => headers.findIndex(h => 
+            h.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").includes(keyword)
         );
 
-        const idxCode = findIdx('banner'); 
-        const idxName = findIdx('nombres');
+        const idxBanner = findIdx('banner');   // Código Banner
+        const idxSocrates = findIdx('socrates'); // Código Sócrates (IMPORTANTE para tu búsqueda)
+        const idxNombres = findIdx('nombres');
         const idxApPat = findIdx('paterno');
         const idxApMat = findIdx('materno');
-        let idxTurnoPlan = findIdx('turno');
-        let idxGrupoMat = findIdx('grupo');
         
-        // Fallback para columnas vecinas si no se encuentran explícitamente
-        let idxDiaPlan = (idxTurnoPlan !== -1) ? idxTurnoPlan + 1 : -1;
-        let idxHoraPlan = (idxTurnoPlan !== -1) ? idxTurnoPlan + 2 : -1;
-        let idxDiaMat = (idxGrupoMat !== -1) ? idxGrupoMat + 1 : -1;
-        let idxHoraMat = (idxGrupoMat !== -1) ? idxGrupoMat + 2 : -1;
+        // Mapeo específico para Turnos Masivos
+        // El archivo tiene: ..., Turno, Día, Hora, ..., GRUPO, Día, Hora
+        const idxTurnoPH = findIdx('turno'); // Primer "Turno"
+        const idxGrupoMat = findIdx('grupo'); // Primer "GRUPO"
+
+        // Asignar Día y Hora relativos a su sección para evitar confusiones
+        // En tu archivo: Turno está en col X, Día en X+1, Hora en X+2
+        const idxDiaPH = idxTurnoPH !== -1 ? idxTurnoPH + 1 : -1;
+        const idxHoraPH = idxTurnoPH !== -1 ? idxTurnoPH + 2 : -1;
+
+        // En tu archivo: GRUPO está en col Y, Día en Y+1, Hora en Y+2
+        const idxDiaMat = idxGrupoMat !== -1 ? idxGrupoMat + 1 : -1;
+        const idxHoraMat = idxGrupoMat !== -1 ? idxGrupoMat + 2 : -1;
 
         studentData = {};
         let count = 0;
 
-        // 3. Leer Datos
         for (let i = headerIndex + 1; i < lines.length; i++) {
             const line = lines[i].trim();
-            if (!line) continue;
+            if(!line) continue;
             
             const cols = line.split(separator);
-            if (cols.length < 3) continue;
+            if(cols.length < 5) continue;
 
-            const code = cleanStr(cols[idxCode]);
+            // Extraer ambos códigos
+            const codeBanner = idxBanner !== -1 ? cleanStr(cols[idxBanner]).toUpperCase() : '';
+            const codeSocrates = idxSocrates !== -1 ? cleanStr(cols[idxSocrates]).toUpperCase() : '';
+
+            // Construir objeto datos
+            let fullName = '';
+            if(idxNombres !== -1) fullName += cleanStr(cols[idxNombres]) + ' ';
+            if(idxApPat !== -1) fullName += cleanStr(cols[idxApPat]) + ' ';
+            if(idxApMat !== -1) fullName += cleanStr(cols[idxApMat]);
             
-            if (code && code.length > 5) { 
-                let fullName = '';
-                if(idxName !== -1) fullName += cleanStr(cols[idxName]) + ' ';
-                if(idxApPat !== -1) fullName += cleanStr(cols[idxApPat]) + ' ';
-                if(idxApMat !== -1) fullName += cleanStr(cols[idxApMat]);
-                
-                studentData[code.toUpperCase()] = {
-                    nombre: fullName.trim() || 'Estudiante UPC',
-                    turnoPlan: idxTurnoPlan !== -1 ? cleanStr(cols[idxTurnoPlan]) : '-',
-                    diaPlan: idxDiaPlan !== -1 ? cleanStr(cols[idxDiaPlan]) : '-',
-                    horaPlan: idxHoraPlan !== -1 ? cleanStr(cols[idxHoraPlan]) : '-',
-                    grupoMat: idxGrupoMat !== -1 ? cleanStr(cols[idxGrupoMat]) : '-',
-                    diaMat: idxDiaMat !== -1 ? cleanStr(cols[idxDiaMat]) : '-',
-                    horaMat: idxHoraMat !== -1 ? cleanStr(cols[idxHoraMat]) : '-'
-                };
-                count++;
-            }
+            const record = {
+                nombre: fullName.trim() || 'Estudiante',
+                // Planificación Horaria
+                turnoPlan: idxTurnoPH !== -1 ? cleanStr(cols[idxTurnoPH]) : '-',
+                diaPlan: idxDiaPH !== -1 ? cleanStr(cols[idxDiaPH]) : '-',
+                horaPlan: idxHoraPH !== -1 ? cleanStr(cols[idxHoraPH]) : '-',
+                // Matrícula Regular
+                grupoMat: idxGrupoMat !== -1 ? cleanStr(cols[idxGrupoMat]) : '-',
+                diaMat: idxDiaMat !== -1 ? cleanStr(cols[idxDiaMat]) : '-',
+                horaMat: idxHoraMat !== -1 ? cleanStr(cols[idxHoraMat]) : '-'
+            };
+
+            // Indexar por AMBOS códigos (si existen)
+            if (codeBanner) studentData[codeBanner] = record;
+            if (codeSocrates) studentData[codeSocrates] = record;
+            
+            if(codeBanner || codeSocrates) count++;
         }
 
-        // Feedback
-        const msg = `Base de datos cargada (${type}): ${count} registros listos.`;
-        document.getElementById('file-name').textContent = msg;
+        // UI Updates
+        document.getElementById('file-name').textContent = `Cargado: ${count} registros indexados.`;
         document.getElementById('file-name').style.color = 'green';
-        document.getElementById('debug-log').textContent = msg + ` (Sep: "${separator}")`;
+        document.getElementById('debug-log').textContent = `Columnas detectadas - Banner:${idxBanner}, Sócrates:${idxSocrates}, TurnoPH:${idxTurnoPH}, GrupoMat:${idxGrupoMat}`;
         
         setTimeout(() => {
             document.getElementById('drop-zone').style.display = 'none';
             document.getElementById('search-step').style.display = 'block';
-        }, 800);
+        }, 500);
     }
 
     function searchStudent() {
         const input = document.getElementById('student-code');
         const code = input.value.trim().toUpperCase();
         const container = document.getElementById('result-container');
-        
         container.innerHTML = '';
 
         if (!code) return;
@@ -493,34 +452,55 @@
         const data = studentData[code];
 
         if (data) {
-            const html = `
+            container.innerHTML = `
                 <div class="result-card">
                     <div class="student-header">
-                        ${data.nombre} <span style="font-weight:400; font-size: 0.9rem; color:#666;">(${code})</span>
+                        ${data.nombre} 
+                        <span style="font-weight:400; font-size:0.8rem; display:block; margin-top:5px; color:#666;">
+                            Código consultado: ${code}
+                        </span>
                     </div>
                     <div class="info-grid">
                         <div class="info-block">
-                            <h3 style="color: var(--upc-red); margin-top:0;">Matrícula Regular</h3>
-                            <span class="info-label">Turno (Grupo)</span>
-                            <div class="info-value highlight">${data.grupoMat || '-'}</div>
-                            <div style="margin-top: 10px;"></div>
-                            <span class="info-label">Fecha y Hora</span>
-                            <div class="info-value">${data.diaMat || '-'} <span style="color:#888">|</span> ${data.horaMat || '-'}</div>
+                            <h3 style="color: var(--upc-red); margin-top:0; border-bottom:1px solid #ddd; padding-bottom:5px;">
+                                Matrícula Regular
+                            </h3>
+                            <div style="margin-top:10px;">
+                                <span class="info-label">Grupo / Prioridad</span>
+                                <div class="info-value highlight">${data.grupoMat}</div>
+                            </div>
+                            <div style="margin-top: 15px;">
+                                <span class="info-label">Fecha de Matrícula</span>
+                                <div class="info-value">${data.diaMat}</div>
+                            </div>
+                            <div style="margin-top: 10px;">
+                                <span class="info-label">Hora de Inicio</span>
+                                <div class="info-value">${data.horaMat}</div>
+                            </div>
                         </div>
+
                         <div class="info-block">
-                            <h3 style="color: #666; margin-top:0;">Planificación Horaria</h3>
-                            <span class="info-label">Turno</span>
-                            <div class="info-value">${data.turnoPlan || '-'}</div>
-                            <div style="margin-top: 10px;"></div>
-                            <span class="info-label">Fecha y Hora</span>
-                            <div class="info-value">${data.diaPlan || '-'} <span style="color:#888">|</span> ${data.horaPlan || '-'}</div>
+                            <h3 style="color: #666; margin-top:0; border-bottom:1px solid #ddd; padding-bottom:5px;">
+                                Planificación Horaria
+                            </h3>
+                            <div style="margin-top:10px;">
+                                <span class="info-label">Turno PH</span>
+                                <div class="info-value">${data.turnoPlan}</div>
+                            </div>
+                            <div style="margin-top: 15px;">
+                                <span class="info-label">Fecha PH</span>
+                                <div class="info-value">${data.diaPlan}</div>
+                            </div>
+                            <div style="margin-top: 10px;">
+                                <span class="info-label">Hora PH</span>
+                                <div class="info-value">${data.horaPlan}</div>
+                            </div>
                         </div>
                     </div>
                 </div>
             `;
-            container.innerHTML = html;
         } else {
-            container.innerHTML = `<div class="error-msg">No se encontró información para el código <strong>${code}</strong>.</div>`;
+            container.innerHTML = `<div class="error-msg">No se encontró el código <strong>${code}</strong> en la base cargada.</div>`;
         }
     }
 
