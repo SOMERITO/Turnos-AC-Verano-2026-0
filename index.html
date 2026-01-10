@@ -62,11 +62,10 @@
             box-shadow: 0 4px 6px rgba(0,0,0,0.05);
             text-align: center;
             margin-bottom: 2rem;
-            border: 2px dashed #ccc; /* Borde punteado para indicar zona */
+            border: 2px dashed #ccc;
             transition: all 0.3s ease;
         }
 
-        /* Clase activa cuando se arrastra un archivo encima */
         .upload-section.drag-over {
             border-color: var(--upc-red);
             background-color: #fff0f0;
@@ -247,6 +246,15 @@
             text-align: center;
             margin-top: 1rem;
         }
+        
+        .debug-info {
+            font-size: 0.75rem;
+            color: #999;
+            margin-top: 20px;
+            text-align: center;
+            border-top: 1px solid #eee;
+            padding-top: 10px;
+        }
 
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
@@ -288,11 +296,12 @@
             <button class="btn-search" onclick="searchStudent()">Buscar</button>
         </div>
         <div id="result-container"></div>
+        <div id="debug-log" class="debug-info"></div>
     </div>
 </div>
 
 <footer>
-    Sistema de Consulta de Turnos - Generado automáticamente
+    Sistema de Consulta de Turnos - V3.0 Robust
 </footer>
 
 <script>
@@ -300,19 +309,13 @@
     const dropZone = document.getElementById('drop-zone');
     const fileInput = document.getElementById('csv-file');
 
-    // --- Lógica Drag & Drop ---
-    
-    // Evitar comportamientos por defecto
+    // --- Drag & Drop ---
     ;['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
         dropZone.addEventListener(eventName, preventDefaults, false);
     });
 
-    function preventDefaults(e) {
-        e.preventDefault();
-        e.stopPropagation();
-    }
+    function preventDefaults(e) { e.preventDefault(); e.stopPropagation(); }
 
-    // Efectos visuales al arrastrar
     ;['dragenter', 'dragover'].forEach(eventName => {
         dropZone.addEventListener(eventName, () => dropZone.classList.add('drag-over'), false);
     });
@@ -321,76 +324,93 @@
         dropZone.addEventListener(eventName, () => dropZone.classList.remove('drag-over'), false);
     });
 
-    // Manejar el archivo soltado
     dropZone.addEventListener('drop', handleDrop, false);
 
     function handleDrop(e) {
         const dt = e.dataTransfer;
         const files = dt.files;
-        if(files.length > 0) {
-            handleFiles(files[0]);
-        }
+        if(files.length > 0) handleFiles(files[0]);
     }
 
-    // Manejar el archivo seleccionado por botón
     fileInput.addEventListener('change', function(e) {
-        if(this.files[0]) {
-            handleFiles(this.files[0]);
-        }
+        if(this.files[0]) handleFiles(this.files[0]);
     });
 
     function handleFiles(file) {
-        // Validar extensión simple
         if (!file.name.toLowerCase().endsWith('.csv')) {
             alert("Por favor, sube un archivo con extensión .csv");
             return;
         }
-
-        document.getElementById('file-name').textContent = "Procesando: " + file.name;
+        document.getElementById('file-name').textContent = "Analizando: " + file.name;
         
         const reader = new FileReader();
         reader.onload = function(e) {
+            // Decodificación UTF-8
             const text = e.target.result;
             processCSV(text);
         };
-        reader.readAsText(file);
+        // Intentar leer como UTF-8
+        reader.readAsText(file, "UTF-8");
     }
 
-    // --- Procesamiento CSV (Igual que antes) ---
+    // --- Procesamiento ROBUSTO del CSV ---
+    function cleanStr(str) {
+        if (!str) return '';
+        return str.trim().replace(/^"|"$/g, '').trim(); // Quitar comillas y espacios
+    }
+
     function processCSV(csvText) {
-        const lines = csvText.split('\n');
+        const lines = csvText.split(/\r\n|\n/);
         
-        // Buscar cabecera
         let headerIndex = -1;
         let headers = [];
-
-        for(let i=0; i < Math.min(20, lines.length); i++) {
-            if(lines[i].includes('Código Banner')) {
+        let separator = ','; // Default
+        
+        // 1. Detectar Cabecera y Separador
+        // Buscamos "Código Banner" en las primeras 50 líneas
+        for(let i=0; i < Math.min(50, lines.length); i++) {
+            const line = lines[i];
+            
+            // Normalizar línea para búsqueda (ignorar tildes o mayúsculas para detectar)
+            const normLine = line.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+            
+            if(normLine.includes('codigo banner')) {
                 headerIndex = i;
-                headers = lines[i].split(',').map(h => h.trim().replace(/"/g, ''));
+                
+                // Determinar separador contando ocurrencias
+                const countComma = (line.match(/,/g) || []).length;
+                const countSemi = (line.match(/;/g) || []).length;
+                separator = (countSemi > countComma) ? ';' : ',';
+                
+                // Parsear headers
+                headers = line.split(separator).map(h => cleanStr(h));
                 break;
             }
         }
 
         if (headerIndex === -1) {
-            alert("No se encontró la cabecera 'Código Banner'. Verifique el archivo.");
-            document.getElementById('file-name').textContent = "Error en el formato del archivo.";
+            alert("Error: No se encontró la columna 'Código Banner'.\nAsegúrate de que el archivo es el correcto.");
+            document.getElementById('file-name').textContent = "Error: Formato de archivo no reconocido.";
             document.getElementById('file-name').style.color = 'var(--upc-red)';
             return;
         }
 
-        // Mapeo dinámico de columnas
-        const idxCode = headers.indexOf('Código Banner');
-        // Para nombres, concatenamos si existen, sino buscamos "Nombres" simple
-        const idxName = headers.indexOf('Nombres');
-        const idxApPat = headers.indexOf('Apellido Paterno');
-        const idxApMat = headers.indexOf('Apellido Materno');
+        // 2. Mapear Índices
+        // Buscamos columnas clave usando includes para ser flexibles con espacios extra o comillas
+        const findIdx = (name) => headers.findIndex(h => 
+            h.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").includes(name.toLowerCase())
+        );
+
+        const idxCode = findIdx('banner'); // "Código Banner"
+        const idxName = findIdx('nombres');
+        const idxApPat = findIdx('paterno');
+        const idxApMat = findIdx('materno');
         
-        // Indices clave
-        let idxTurnoPlan = headers.indexOf('Turno');
-        let idxGrupoMat = headers.indexOf('GRUPO');
+        let idxTurnoPlan = findIdx('turno');
+        let idxGrupoMat = findIdx('grupo');
         
-        // Asumiendo orden relativo si existen las columnas base
+        // Fallback lógico si encuentra múltiples "Turno" o no encuentra
+        // Si no hay cabecera explícita de Hora/Día, asumimos las columnas siguientes
         let idxDiaPlan = (idxTurnoPlan !== -1) ? idxTurnoPlan + 1 : -1;
         let idxHoraPlan = (idxTurnoPlan !== -1) ? idxTurnoPlan + 2 : -1;
         
@@ -400,40 +420,47 @@
         studentData = {};
         let count = 0;
 
+        // 3. Leer Datos
         for (let i = headerIndex + 1; i < lines.length; i++) {
             const line = lines[i].trim();
             if (!line) continue;
             
-            const cols = line.split(','); // Nota: CSV simple
-            if (cols.length < 5) continue; 
-
-            const code = cols[idxCode] ? cols[idxCode].trim() : '';
+            // Split respetando el separador detectado
+            // Nota: Esto es un split simple. Si hay comas dentro de comillas ("Apellido, Nombre") podría fallar en casos complejos, 
+            // pero para esta data suele funcionar bien.
+            const cols = line.split(separator);
             
-            if (code) {
-                // Construir nombre completo
+            if (cols.length < 5) continue; // Línea muy corta, ignorar
+
+            const code = cleanStr(cols[idxCode]);
+            
+            if (code && code.length > 5) { // Validación básica de código
+                // Construir nombre
                 let fullName = '';
-                if(idxName !== -1) fullName += cols[idxName] + ' ';
-                if(idxApPat !== -1) fullName += cols[idxApPat] + ' ';
-                if(idxApMat !== -1) fullName += cols[idxApMat];
+                if(idxName !== -1) fullName += cleanStr(cols[idxName]) + ' ';
+                if(idxApPat !== -1) fullName += cleanStr(cols[idxApPat]) + ' ';
+                if(idxApMat !== -1) fullName += cleanStr(cols[idxApMat]);
                 
+                // Guardar en DB
                 studentData[code.toUpperCase()] = {
-                    nombre: fullName.trim(),
-                    turnoPlan: idxTurnoPlan !== -1 ? cols[idxTurnoPlan] : '-',
-                    diaPlan: idxDiaPlan !== -1 ? cols[idxDiaPlan] : '-',
-                    horaPlan: idxHoraPlan !== -1 ? cols[idxHoraPlan] : '-',
-                    grupoMat: idxGrupoMat !== -1 ? cols[idxGrupoMat] : '-',
-                    diaMat: idxDiaMat !== -1 ? cols[idxDiaMat] : '-',
-                    horaMat: idxHoraMat !== -1 ? cols[idxHoraMat] : '-'
+                    nombre: fullName.trim() || 'Estudiante UPC',
+                    turnoPlan: idxTurnoPlan !== -1 ? cleanStr(cols[idxTurnoPlan]) : '-',
+                    diaPlan: idxDiaPlan !== -1 ? cleanStr(cols[idxDiaPlan]) : '-',
+                    horaPlan: idxHoraPlan !== -1 ? cleanStr(cols[idxHoraPlan]) : '-',
+                    grupoMat: idxGrupoMat !== -1 ? cleanStr(cols[idxGrupoMat]) : '-',
+                    diaMat: idxDiaMat !== -1 ? cleanStr(cols[idxDiaMat]) : '-',
+                    horaMat: idxHoraMat !== -1 ? cleanStr(cols[idxHoraMat]) : '-'
                 };
                 count++;
             }
         }
 
-        // Éxito
-        document.getElementById('file-name').textContent = `¡Listo! ${count} registros cargados.`;
+        // Feedback UI
+        const msg = `Base de datos cargada: ${count} estudiantes. (Separador: "${separator}")`;
+        document.getElementById('file-name').textContent = msg;
         document.getElementById('file-name').style.color = 'green';
+        document.getElementById('debug-log').textContent = msg;
         
-        // Ocultar zona de carga y mostrar búsqueda
         setTimeout(() => {
             document.getElementById('drop-zone').style.display = 'none';
             document.getElementById('search-step').style.display = 'block';
@@ -483,7 +510,6 @@
         }
     }
 
-    // Permitir Enter para buscar
     document.getElementById('student-code').addEventListener('keypress', function (e) {
         if (e.key === 'Enter') searchStudent();
     });
