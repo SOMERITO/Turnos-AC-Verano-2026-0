@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Consulta de Turnos UPC - Verano 2026</title>
+    <style>
+        :root {
+            --upc-red: #E30613;
+            --upc-dark: #333333;
+            --upc-gray: #f2f2f2;
+            --text-color: #444;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--upc-gray);
+            color: var(--text-color);
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        /* Header */
+        header {
+            background-color: white;
+            border-bottom: 4px solid var(--upc-red);
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .logo {
+            font-weight: 800;
+            font-size: 1.5rem;
+            color: var(--upc-red);
+            text-transform: uppercase;
+            letter-spacing: -1px;
+        }
+
+        .logo span {
+            color: var(--upc-dark);
+        }
+
+        /* Main Container */
+        .container {
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+            flex: 1;
+        }
+
+        /* Upload Section */
+        .upload-section {
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+        }
+
+        .btn-upload {
+            border: 2px solid var(--upc-red);
+            color: var(--upc-red);
+            background-color: white;
+            padding: 10px 20px;
+            border-radius: 50px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-upload:hover {
+            background-color: var(--upc-red);
+            color: white;
+        }
+
+        input[type=file] {
+            font-size: 100px;
+            position: absolute;
+            left: 0;
+            top: 0;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        #file-name {
+            display: block;
+            margin-top: 10px;
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        /* Search Section */
+        .search-section {
+            display: none; /* Hidden until file is loaded */
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            animation: fadeIn 0.5s ease;
+        }
+
+        h2 {
+            margin-top: 0;
+            color: var(--upc-dark);
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+        }
+
+        .search-box {
+            display: flex;
+            gap: 10px;
+        }
+
+        input[type="text"] {
+            flex: 1;
+            padding: 12px 15px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        input[type="text"]:focus {
+            border-color: var(--upc-red);
+        }
+
+        .btn-search {
+            background-color: var(--upc-red);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 4px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+
+        .btn-search:hover {
+            background-color: #c40510;
+        }
+
+        /* Results Section */
+        #result-container {
+            margin-top: 2rem;
+        }
+
+        .result-card {
+            background: white;
+            border-left: 5px solid var(--upc-red);
+            border-radius: 4px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            margin-bottom: 1rem;
+            animation: slideUp 0.4s ease;
+        }
+
+        .student-header {
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            color: var(--upc-dark);
+            border-bottom: 1px solid #eee;
+            padding-bottom: 0.5rem;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+        }
+
+        @media (max-width: 600px) {
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .info-block {
+            background-color: #f9f9f9;
+            padding: 1rem;
+            border-radius: 6px;
+        }
+
+        .info-label {
+            font-size: 0.85rem;
+            color: #666;
+            text-transform: uppercase;
+            font-weight: 600;
+            margin-bottom: 5px;
+            display: block;
+        }
+
+        .info-value {
+            font-size: 1.1rem;
+            font-weight: 500;
+            color: var(--upc-dark);
+        }
+
+        .highlight {
+            color: var(--upc-red);
+            font-weight: 700;
+        }
+
+        .error-msg {
+            color: var(--upc-red);
+            background: #ffe6e6;
+            padding: 1rem;
+            border-radius: 4px;
+            text-align: center;
+            margin-top: 1rem;
+        }
+
+        /* Animations */
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 1.5rem;
+            font-size: 0.8rem;
+            color: #888;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="logo">UPC <span>Turnos</span></div>
+    <div style="font-size: 0.9rem; font-weight: 600;">Verano 2026</div>
+</header>
+
+<div class="container">
+    <div class="upload-section" id="upload-step">
+        <h2>1. Cargar Base de Datos</h2>
+        <p style="margin-bottom: 1.5rem; color: #666;">Por favor, carga el archivo <strong>.csv</strong> de turnos masivos para iniciar.</p>
+        
+        <div class="file-input-wrapper">
+            <button class="btn-upload">Seleccionar Archivo CSV</button>
+            <input type="file" id="csv-file" accept=".csv">
+        </div>
+        <div id="file-name"></div>
+    </div>
+
+    <div class="search-section" id="search-step">
+        <h2>Consultar Estudiante</h2>
+        <div class="search-box">
+            <input type="text" id="student-code" placeholder="Ingrese Código (ej. N00123456)" maxlength="20">
+            <button class="btn-search" onclick="searchStudent()">Buscar</button>
+        </div>
+        <div id="result-container"></div>
+    </div>
+</div>
+
+<footer>
+    Sistema de Consulta de Turnos - Generado automáticamente
+</footer>
+
+<script>
+    let studentData = {};
+
+    // Manejo de carga de archivo
+    document.getElementById('csv-file').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        document.getElementById('file-name').textContent = "Cargando: " + file.name;
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const text = e.target.result;
+            processCSV(text);
+        };
+        reader.readAsText(file);
+    });
+
+    function processCSV(csvText) {
+        const lines = csvText.split('\n');
+        
+        // Estructura esperada basada en el archivo:
+        // Indices ajustados asumiendo posible coma inicial
+        // Col 3 (Index 3): Código Banner
+        // Col 7 (Index 8): Nombres (aprox) -> Index 8 es Turno Plan? Revisemos.
+        
+        // Lógica de mapeo robusta:
+        // Buscamos la línea de cabecera que tenga "Código Banner"
+        let headerIndex = -1;
+        let headers = [];
+
+        for(let i=0; i < Math.min(20, lines.length); i++) {
+            if(lines[i].includes('Código Banner')) {
+                headerIndex = i;
+                // Limpiar comillas y espacios
+                headers = lines[i].split(',').map(h => h.trim().replace(/"/g, ''));
+                break;
+            }
+        }
+
+        if (headerIndex === -1) {
+            alert("No se encontró la cabecera 'Código Banner' en el archivo. Verifique el formato.");
+            return;
+        }
+
+        // Mapeo de índices
+        const idxCode = headers.indexOf('Código Banner');
+        const idxName = headers.indexOf('Nombres');
+        const idxApPat = headers.indexOf('Apellido Paterno');
+        const idxApMat = headers.indexOf('Apellido Materno');
+        
+        // Para turnos hay nombres duplicados ("Día", "Hora"), así que usaremos posición relativa o conteo
+        // Estrategia: Asumimos la estructura fija detectada en el análisis
+        // Planificación: Columna Turno, Día, Hora (primer bloque)
+        // Matrícula: Columna GRUPO, Día, Hora (segundo bloque)
+        
+        // En base al análisis del archivo:
+        // Columna 3: Código (Index 3 si hay coma inicial)
+        // Columna 8: Turno Plan (Index 8)
+        // Columna 9: Día Plan (Index 9)
+        // Columna 10: Hora Plan (Index 10)
+        // Columna 12: Grupo Matrícula (Index 12)
+        // Columna 13: Día Matrícula (Index 13)
+        // Columna 14: Hora Matrícula (Index 14)
+        
+        // Ajustaremos dinámicamente si encontramos la cabecera exacta
+        let idxTurnoPlan = headers.indexOf('Turno');
+        let idxGrupoMat = headers.indexOf('GRUPO');
+        
+        // Asumiendo que Día y Hora siguen a Turno y Grupo respectivamente
+        let idxDiaPlan = idxTurnoPlan + 1;
+        let idxHoraPlan = idxTurnoPlan + 2;
+        let idxDiaMat = idxGrupoMat + 1;
+        let idxHoraMat = idxGrupoMat + 2;
+
+        studentData = {}; // Reiniciar DB
+        let count = 0;
+
+        for (let i = headerIndex + 1; i < lines.length; i++) {
+            const line = lines[i].trim();
+            if (!line) continue;
+            
+            // CSV split básico (nota: fallará si hay comas dentro de comillas, pero el archivo parece simple)
+            const cols = line.split(',');
+
+            if (cols.length < 10) continue;
+
+            const code = cols[idxCode].trim();
+            if (code) {
+                studentData[code.toUpperCase()] = {
+                    nombre: `${cols[idxName] || ''} ${cols[idxApPat] || ''} ${cols[idxApMat] || ''}`,
+                    turnoPlan: cols[idxTurnoPlan],
+                    diaPlan: cols[idxDiaPlan],
+                    horaPlan: cols[idxHoraPlan],
+                    grupoMat: cols[idxGrupoMat],
+                    diaMat: cols[idxDiaMat],
+                    horaMat: cols[idxHoraMat]
+                };
+                count++;
+            }
+        }
+
+        // UI Feedback
+        document.getElementById('file-name').textContent = `Archivo procesado: ${count} estudiantes cargados.`;
+        document.getElementById('file-name').style.color = 'green';
+        document.getElementById('upload-step').style.display = 'none';
+        document.getElementById('search-step').style.display = 'block';
+    }
+
+    function searchStudent() {
+        const input = document.getElementById('student-code');
+        const code = input.value.trim().toUpperCase();
+        const container = document.getElementById('result-container');
+        
+        container.innerHTML = ''; // Limpiar
+
+        if (!code) return;
+
+        const data = studentData[code];
+
+        if (data) {
+            const html = `
+                <div class="result-card">
+                    <div class="student-header">
+                        ${data.nombre} <span style="font-weight:400; font-size: 0.9rem; color:#666;">(${code})</span>
+                    </div>
+                    
+                    <div class="info-grid">
+                        <div class="info-block">
+                            <h3 style="color: var(--upc-red); margin-top:0;">Matrícula Regular</h3>
+                            <span class="info-label">Turno (Grupo)</span>
+                            <div class="info-value highlight">${data.grupoMat || '-'}</div>
+                            
+                            <div style="margin-top: 10px;"></div>
+                            
+                            <span class="info-label">Fecha y Hora</span>
+                            <div class="info-value">${data.diaMat || '-'} <span style="color:#888">|</span> ${data.horaMat || '-'}</div>
+                        </div>
+
+                        <div class="info-block">
+                            <h3 style="color: #666; margin-top:0;">Planificación Horaria</h3>
+                            <span class="info-label">Turno</span>
+                            <div class="info-value">${data.turnoPlan || '-'}</div>
+                            
+                            <div style="margin-top: 10px;"></div>
+                            
+                            <span class="info-label">Fecha y Hora</span>
+                            <div class="info-value">${data.diaPlan || '-'} <span style="color:#888">|</span> ${data.horaPlan || '-'}</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            container.innerHTML = html;
+        } else {
+            container.innerHTML = `<div class="error-msg">No se encontró información para el código <strong>${code}</strong>.</div>`;
+        }
+    }
+
+    // Permitir Enter para buscar
+    document.getElementById('student-code').addEventListener('keypress', function (e) {
+        if (e.key === 'Enter') {
+            searchStudent();
+        }
+    });
+</script>
+
+</body>
+</html>
