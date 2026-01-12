@@ -3,264 +3,604 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Buscador de Turnos UPC</title>
+    <title>Consulta de Turnos UPC | Verano 2026</title>
     <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap" rel="stylesheet">
     
     <style>
-        body { font-family: 'Segoe UI', sans-serif; background: #f4f4f4; padding: 20px; color: #333; }
-        .container { max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-        
-        /* Header UPC */
-        .header { border-bottom: 4px solid #E30613; padding-bottom: 20px; margin-bottom: 30px; display: flex; align-items: center; justify-content: space-between; }
-        .logo { font-size: 24px; font-weight: 900; color: #E30613; }
-        .logo span { color: #333; font-weight: 400; }
+        :root {
+            --upc-red: #E30613;
+            --upc-dark: #121212;
+            --upc-gray: #f4f6f9;
+            --shadow-soft: 0 10px 30px rgba(0,0,0,0.05);
+            --shadow-hover: 0 15px 40px rgba(227, 6, 19, 0.15);
+        }
 
-        /* Upload */
-        .upload-box { border: 2px dashed #ccc; padding: 30px; text-align: center; border-radius: 8px; cursor: pointer; transition: 0.3s; background: #fafafa; }
-        .upload-box:hover { border-color: #E30613; background: #fff5f5; }
-        .status { margin-top: 10px; font-size: 14px; font-weight: bold; }
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: var(--upc-gray);
+            margin: 0;
+            padding: 0;
+            color: #333;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
 
-        /* Search */
-        .search-area { margin-top: 30px; display: none; }
-        .input-group { display: flex; gap: 10px; }
-        input { flex: 1; padding: 12px; border: 1px solid #ddd; border-radius: 5px; font-size: 16px; }
-        button { background: #E30613; color: white; border: none; padding: 12px 25px; border-radius: 5px; cursor: pointer; font-size: 16px; font-weight: bold; }
-        button:hover { background: #c4040f; }
+        /* HEADER */
+        header {
+            background: white;
+            padding: 15px 5%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            border-top: 5px solid var(--upc-red);
+            position: relative;
+            z-index: 10;
+        }
 
-        /* Results */
-        .result-card { margin-top: 30px; display: none; border: 1px solid #eee; border-radius: 8px; overflow: hidden; }
-        .result-header { background: #333; color: white; padding: 15px 20px; }
-        .result-body { padding: 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-        
-        .info-col h3 { color: #E30613; font-size: 16px; border-bottom: 1px solid #eee; padding-bottom: 5px; margin-top: 0; }
-        .info-col.gray h3 { color: #555; }
-        
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .brand-logo {
+            font-size: 26px;
+            font-weight: 900;
+            color: var(--upc-red);
+            letter-spacing: -1px;
+        }
+
+        .brand-text {
+            border-left: 2px solid #eee;
+            padding-left: 15px;
+            line-height: 1.2;
+        }
+
+        .brand-text h1 { margin: 0; font-size: 16px; color: var(--upc-dark); font-weight: 700; }
+        .brand-text p { margin: 0; font-size: 13px; color: #777; }
+
+        /* MAIN LAYOUT */
+        .container {
+            max-width: 900px;
+            margin: 40px auto;
+            padding: 0 20px;
+            flex: 1;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        /* CARDS */
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 40px;
+            box-shadow: var(--shadow-soft);
+            margin-bottom: 20px;
+            animation: fadeIn 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+
+        /* UPLOAD ZONE */
+        .upload-zone {
+            border: 2px dashed #e0e0e0;
+            border-radius: 12px;
+            padding: 60px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: #fafafa;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .upload-zone:hover {
+            border-color: var(--upc-red);
+            background: #fff5f5;
+            transform: translateY(-2px);
+        }
+
+        .upload-icon {
+            font-size: 50px;
+            color: #ccc;
+            margin-bottom: 20px;
+            transition: 0.3s;
+        }
+
+        .upload-zone:hover .upload-icon {
+            color: var(--upc-red);
+            transform: scale(1.1);
+        }
+
+        /* BUTTONS (ANIMATED) */
+        .btn {
+            border: none;
+            padding: 14px 30px;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 15px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-primary {
+            background-color: var(--upc-red);
+            color: white;
+            box-shadow: 0 4px 15px rgba(227, 6, 19, 0.3);
+        }
+
+        .btn-primary:hover {
+            background-color: #c90511;
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-hover);
+        }
+
+        .btn-primary:active {
+            transform: translateY(1px);
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 2px solid #ddd;
+            color: #666;
+            padding: 8px 20px;
+            font-size: 13px;
+        }
+
+        .btn-outline:hover {
+            border-color: var(--upc-red);
+            color: var(--upc-red);
+        }
+
+        /* SEARCH SECTION */
+        .search-container {
+            display: flex;
+            gap: 15px;
+            margin-top: 10px;
+        }
+
+        .search-input {
+            flex: 1;
+            padding: 15px 20px;
+            border: 2px solid #eee;
+            border-radius: 8px;
+            font-size: 18px;
+            outline: none;
+            transition: all 0.3s;
+            font-family: 'Roboto', sans-serif;
+        }
+
+        .search-input:focus {
+            border-color: var(--upc-red);
+            box-shadow: 0 0 0 4px rgba(227, 6, 19, 0.1);
+        }
+
+        /* RESULTS GRID */
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 20px;
+            margin-bottom: 25px;
+        }
+
+        .student-name {
+            font-size: 24px;
+            font-weight: 800;
+            color: var(--upc-dark);
+            margin: 0 0 5px 0;
+        }
+
+        .student-code {
+            font-size: 14px;
+            color: #777;
+            background: #f0f0f0;
+            padding: 4px 10px;
+            border-radius: 4px;
+            display: inline-block;
+        }
+
+        .data-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+        }
+
+        @media (max-width: 768px) {
+            .data-grid { grid-template-columns: 1fr; }
+        }
+
+        .info-card {
+            background: #fff;
+            border: 1px solid #eee;
+            border-radius: 12px;
+            padding: 25px;
+            position: relative;
+            transition: 0.3s;
+        }
+
+        .info-card:hover {
+            border-color: #ddd;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        }
+
+        .card-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid transparent;
+        }
+
+        .ph-card .card-label { color: #555; border-color: #555; }
+        .mat-card .card-label { color: var(--upc-red); border-color: var(--upc-red); }
+
         .data-row { margin-bottom: 15px; }
-        .label { font-size: 12px; color: #888; text-transform: uppercase; display: block; }
-        .value { font-size: 18px; font-weight: 600; }
+        .data-label { font-size: 12px; color: #888; margin-bottom: 4px; display: block; }
+        .data-value { font-size: 18px; font-weight: 600; color: #333; }
+        .highlight { font-size: 22px; color: var(--upc-red); }
 
-        .error { color: red; margin-top: 10px; display: none; }
+        /* UTILS */
+        .hidden { display: none !important; }
+        .error-msg { color: var(--upc-red); margin-top: 15px; font-weight: 500; display: none; animation: shake 0.4s; }
+        
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
+
+        footer {
+            text-align: center;
+            padding: 20px;
+            font-size: 12px;
+            color: #999;
+            margin-top: auto;
+        }
     </style>
 </head>
 <body>
 
+<header>
+    <div class="brand">
+        <div class="brand-logo">UPC</div>
+        <div class="brand-text">
+            <h1>Portal de Turnos</h1>
+            <p>Verano 2026</p>
+        </div>
+    </div>
+    <button id="btn-reset" class="btn btn-outline hidden" onclick="resetApp()">
+        <i class="fa-solid fa-upload"></i> Subir otra base
+    </button>
+</header>
+
 <div class="container">
-    <div class="header">
-        <div class="logo">UPC <span>Buscador de Turnos</span></div>
-        <div style="font-size: 12px; color: #888;">Verano 2026</div>
-    </div>
 
-    <div class="upload-box" onclick="document.getElementById('file').click()">
-        <i class="fas fa-file-excel" style="font-size: 40px; color: #ccc; margin-bottom: 10px;"></i>
-        <div>Clic aquí para subir el Excel</div>
-        <div style="font-size: 12px; color: #888; margin-top: 5px;">(Turnos_Masivos_PH...)</div>
-        <input type="file" id="file" accept=".xlsx, .csv" style="display:none">
-    </div>
-    <div id="status" class="status" style="text-align: center;"></div>
+    <div id="section-upload" class="card">
+        <h2 style="margin-top:0; font-size: 20px;">Carga de Datos</h2>
+        <p style="color:#666; margin-bottom: 30px;">
+            Sube el archivo Excel <code>Turnos_Masivos_PH...</code> para comenzar.
+        </p>
 
-    <div id="search-section" class="search-area">
-        <div class="input-group">
-            <input type="text" id="code-input" placeholder="Ingrese Código Sócrates (ej: U20241F034)">
-            <button onclick="buscar()">BUSCAR</button>
+        <div class="upload-zone" id="drop-zone" onclick="document.getElementById('file-input').click()">
+            <i class="fa-solid fa-cloud-arrow-up upload-icon"></i>
+            <div style="font-size: 18px; font-weight: 500; color:#444;">Arrastra tu archivo aquí</div>
+            <div style="font-size: 14px; color: #999; margin-top: 10px;">Soporta .xlsx y .csv</div>
+            <input type="file" id="file-input" accept=".xlsx, .xls, .csv" style="display: none;">
         </div>
-        <div id="error-msg" class="error"></div>
+        <div id="upload-status" style="margin-top: 20px; font-weight: 600; text-align: center; color: var(--upc-red);"></div>
     </div>
 
-    <div id="result" class="result-card">
+    <div id="section-search" class="card hidden">
+        <h2 style="margin-top:0; font-size: 20px; margin-bottom: 20px;">Buscar Estudiante</h2>
+        
+        <div class="search-container">
+            <input type="text" id="input-code" class="search-input" placeholder="Ingresa Código Sócrates (ej: U20241F034)" maxlength="15">
+            <button class="btn btn-primary" onclick="searchStudent()">
+                <i class="fa-solid fa-magnifying-glass"></i> Consultar
+            </button>
+        </div>
+        <div id="search-error" class="error-msg"></div>
+    </div>
+
+    <div id="section-result" class="card hidden">
         <div class="result-header">
-            <h2 style="margin:0; font-size: 20px;" id="res-name">Nombre Alumno</h2>
-            <span style="font-size: 13px; opacity: 0.8;" id="res-codes">Códigos</span>
+            <div>
+                <h3 class="student-name" id="res-name">Nombre del Alumno</h3>
+                <span class="student-code" id="res-codes">CÓDIGOS</span>
+            </div>
+            <div style="font-size: 30px; color: #ddd;">
+                <i class="fa-solid fa-user-graduate"></i>
+            </div>
         </div>
-        <div class="result-body">
-            
-            <div class="info-col">
-                <h3><i class="fas fa-calendar-check"></i> MATRÍCULA REGULAR</h3>
+
+        <div class="data-grid">
+            <div class="info-card mat-card">
+                <div class="card-label">
+                    <i class="fa-regular fa-calendar-check"></i> Matrícula Regular
+                </div>
+                
                 <div class="data-row">
-                    <span class="label">Grupo / Prioridad</span>
-                    <span class="value" id="res-mat-grupo" style="color:#E30613">TURNO X</span>
+                    <span class="data-label">GRUPO / PRIORIDAD</span>
+                    <span class="data-value highlight" id="res-mat-grupo">-</span>
                 </div>
                 <div class="data-row">
-                    <span class="label">Fecha y Hora</span>
-                    <span class="value" id="res-mat-fecha">-</span>
+                    <span class="data-label">FECHA ASIGNADA</span>
+                    <span class="data-value" id="res-mat-fecha">-</span>
+                </div>
+                <div class="data-row">
+                    <span class="data-label">HORA INICIO</span>
+                    <span class="data-value" id="res-mat-hora">-</span>
                 </div>
             </div>
 
-            <div class="info-col gray">
-                <h3><i class="fas fa-clock"></i> PLANIFICACIÓN HORARIA</h3>
+            <div class="info-card ph-card">
+                <div class="card-label">
+                    <i class="fa-solid fa-list-ol"></i> Planificación Horaria
+                </div>
+                
                 <div class="data-row">
-                    <span class="label">Turno PH</span>
-                    <span class="value" id="res-ph-turno">1</span>
+                    <span class="data-label">TURNO PH</span>
+                    <span class="data-value" id="res-ph-turno">-</span>
                 </div>
                 <div class="data-row">
-                    <span class="label">Fecha y Hora</span>
-                    <span class="value" id="res-ph-fecha">-</span>
+                    <span class="data-label">FECHA</span>
+                    <span class="data-value" id="res-ph-fecha">-</span>
+                </div>
+                <div class="data-row">
+                    <span class="data-label">HORA</span>
+                    <span class="data-value" id="res-ph-hora">-</span>
                 </div>
             </div>
-
         </div>
     </div>
+
 </div>
 
-<script>
-    let BD = {}; // Aquí guardaremos los datos limpios
+<footer>
+    Sistema de Consulta de Turnos - Uso Interno - © 2026
+</footer>
 
-    document.getElementById('file').addEventListener('change', function(e) {
-        const file = e.target.files[0];
+<script>
+    let DATABASE = {}; 
+
+    // --- ELEMENTOS ---
+    const dropZone = document.getElementById('drop-zone');
+    const fileInput = document.getElementById('file-input');
+    const statusMsg = document.getElementById('upload-status');
+    const btnReset = document.getElementById('btn-reset');
+    
+    // Secciones
+    const sectUpload = document.getElementById('section-upload');
+    const sectSearch = document.getElementById('section-search');
+    const sectResult = document.getElementById('section-result');
+
+    // --- EVENTOS DRAG & DROP ---
+    ['dragenter', 'dragover'].forEach(e => {
+        dropZone.addEventListener(e, (ev) => {
+            ev.preventDefault();
+            dropZone.style.background = '#fff0f0';
+            dropZone.style.borderColor = '#E30613';
+        });
+    });
+
+    ['dragleave', 'drop'].forEach(e => {
+        dropZone.addEventListener(e, (ev) => {
+            ev.preventDefault();
+            dropZone.style.background = '#fafafa';
+            dropZone.style.borderColor = '#e0e0e0';
+        });
+    });
+
+    dropZone.addEventListener('drop', (e) => handleFile(e.dataTransfer.files[0]));
+    fileInput.addEventListener('change', (e) => handleFile(e.target.files[0]));
+
+    // --- LÓGICA DE CARGA ---
+    function handleFile(file) {
         if(!file) return;
 
-        const reader = new FileReader();
-        document.getElementById('status').innerText = "Leyendo archivo...";
-        document.getElementById('status').style.color = "blue";
+        statusMsg.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Procesando archivo...';
+        statusMsg.style.color = '#666';
 
-        reader.onload = function(e) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
             try {
                 const data = new Uint8Array(e.target.result);
                 const workbook = XLSX.read(data, {type: 'array'});
                 
-                // Buscar en TODAS las hojas
-                let procesado = false;
-                workbook.SheetNames.forEach(sheetName => {
-                    if(procesado) return;
-                    
-                    const rows = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], {header: 1});
-                    if(analizarHoja(rows)) procesado = true;
+                let loaded = false;
+                
+                // Buscar en todas las pestañas
+                workbook.SheetNames.forEach(sheet => {
+                    if(loaded) return;
+                    const rows = XLSX.utils.sheet_to_json(workbook.Sheets[sheet], {header: 1});
+                    if(processRows(rows)) loaded = true;
                 });
 
-                if(procesado) {
-                    document.getElementById('status').innerText = "✓ Archivo cargado correctamente";
-                    document.getElementById('status').style.color = "green";
-                    document.getElementById('search-section').style.display = "block";
+                if(loaded) {
+                    // Transición exitosa
+                    setTimeout(() => {
+                        sectUpload.classList.add('hidden'); // Ocultar carga
+                        sectSearch.classList.remove('hidden'); // Mostrar buscador
+                        btnReset.classList.remove('hidden'); // Mostrar botón reset
+                        statusMsg.innerText = '';
+                    }, 800);
                 } else {
-                    throw new Error("No se encontró la columna 'Código Sócrates' o 'Banner'");
+                    throw new Error("No se encontraron las columnas 'Código Sócrates' o 'Turno'.");
                 }
-            } catch (err) {
+
+            } catch(err) {
                 console.error(err);
-                document.getElementById('status').innerText = "Error: " + err.message;
-                document.getElementById('status').style.color = "red";
+                statusMsg.innerText = "Error: " + err.message;
+                statusMsg.style.color = "var(--upc-red)";
             }
         };
         reader.readAsArrayBuffer(file);
-    });
+    }
 
-    function analizarHoja(rows) {
-        // 1. Encontrar la fila de cabecera buscando "Socrates" y "Turno"
-        let headerIdx = -1;
-        for(let i=0; i<Math.min(rows.length, 50); i++) {
-            const linea = JSON.stringify(rows[i]).toLowerCase();
-            if(linea.includes("sócrates") || linea.includes("socrates")) {
-                headerIdx = i;
+    function processRows(rows) {
+        // 1. Ubicar la fila de cabecera
+        let hIdx = -1;
+        // Buscamos fila que tenga "sócrates" y "turno"
+        for(let i=0; i < Math.min(rows.length, 50); i++) {
+            const line = JSON.stringify(rows[i]).toLowerCase();
+            if(line.includes("sócrates") || line.includes("socrates")) {
+                hIdx = i;
                 break;
             }
         }
+        if(hIdx === -1) return false;
 
-        if(headerIdx === -1) return false;
-
-        // 2. Mapear columnas (usamos nombres aproximados)
-        const headers = rows[headerIdx].map(h => (h||"").toString().toLowerCase().trim());
+        // 2. Mapear columnas
+        const headers = rows[hIdx].map(h => (h||"").toString().toLowerCase().trim());
         
-        const colSocrates = headers.findIndex(h => h.includes("sócrates") || h.includes("socrates"));
-        const colBanner = headers.findIndex(h => h.includes("banner"));
-        const colNombre = headers.findIndex(h => h.includes("nombres"));
-        const colPaterno = headers.findIndex(h => h.includes("paterno"));
-        const colMaterno = headers.findIndex(h => h.includes("materno"));
-
-        // Lógica de vecinos:
-        // Buscamos "Turno" (para PH). Sus vecinos son +1 (Día) y +2 (Hora)
-        const colTurnoPH = headers.indexOf("turno");
+        const idxSoc = headers.findIndex(h => h.includes("sócrates") || h.includes("socrates"));
+        const idxBan = headers.findIndex(h => h.includes("banner"));
+        const idxNom = headers.findIndex(h => h.includes("nombres"));
+        const idxPat = headers.findIndex(h => h.includes("paterno"));
+        const idxMat = headers.findIndex(h => h.includes("materno"));
         
-        // Buscamos "GRUPO" (para Matrícula). Sus vecinos son +1 (Día) y +2 (Hora)
-        const colGrupoMat = headers.findIndex(h => h === "grupo");
+        // Clave: Ubicación relativa
+        // Turno PH
+        const idxTurno = headers.indexOf("turno");
+        // Grupo Matrícula
+        const idxGrupo = headers.indexOf("grupo");
 
-        if(colSocrates === -1 || colTurnoPH === -1) return false;
+        if(idxSoc === -1 || idxTurno === -1) return false;
 
-        // 3. Extraer datos
-        BD = {};
-        for(let i = headerIdx + 1; i < rows.length; i++) {
+        // 3. Llenar Base de Datos
+        DATABASE = {};
+        for(let i = hIdx + 1; i < rows.length; i++) {
             const row = rows[i];
             if(!row) continue;
 
-            const codS = (row[colSocrates] || "").toString().trim().toUpperCase();
-            const codB = colBanner > -1 ? (row[colBanner] || "").toString().trim().toUpperCase() : "";
+            const codS = (row[idxSoc] || "").toString().trim().toUpperCase();
+            const codB = idxBan > -1 ? (row[idxBan] || "").toString().trim().toUpperCase() : "";
 
             if(codS.length > 3 || codB.length > 3) {
-                // Nombre completo
-                const nom = (row[colNombre] || "") + " " + (row[colPaterno] || "") + " " + (row[colMaterno] || "");
+                // Formatear Nombre
+                const nombre = `${row[idxNom]||''} ${row[idxPat]||''} ${row[idxMat]||''}`.trim();
                 
-                // Datos PH
-                const ph_turno = row[colTurnoPH];
-                const ph_dia = row[colTurnoPH + 1];
-                const ph_hora = row[colTurnoPH + 2];
+                // Formatear Datos PH
+                const phT = row[idxTurno];
+                const phD = formatExcelDate(row[idxTurno + 1]);
+                const phH = formatExcelTime(row[idxTurno + 2]);
 
-                // Datos Matrícula
-                const mat_grupo = colGrupoMat > -1 ? row[colGrupoMat] : "-";
-                const mat_dia = colGrupoMat > -1 ? row[colGrupoMat + 1] : "-";
-                const mat_hora = colGrupoMat > -1 ? row[colGrupoMat + 2] : "-";
+                // Formatear Datos Matrícula (si existe columna GRUPO)
+                let matG = "-", matD = "-", matH = "-";
+                if(idxGrupo > -1) {
+                    matG = row[idxGrupo];
+                    matD = formatExcelDate(row[idxGrupo + 1]);
+                    matH = formatExcelTime(row[idxGrupo + 2]);
+                }
 
-                const obj = {
-                    nombre: nom,
-                    codigos: `${codS} / ${codB}`,
-                    ph: { t: ph_turno, f: formatearFecha(ph_dia), h: formatearHora(ph_hora) },
-                    mat: { g: mat_grupo, f: formatearFecha(mat_dia), h: formatearHora(mat_hora) }
+                const data = {
+                    name: nombre,
+                    codes: `${codS} | ${codB}`,
+                    ph: { t: phT, d: phD, h: phH },
+                    mat: { g: matG, d: matD, h: matH }
                 };
 
-                if(codS) BD[codS] = obj;
-                if(codB) BD[codB] = obj;
+                if(codS) DATABASE[codS] = data;
+                if(codB) DATABASE[codB] = data;
             }
         }
         return true;
     }
 
-    function buscar() {
-        const codigo = document.getElementById('code-input').value.trim().toUpperCase();
-        const data = BD[codigo];
-        const resultDiv = document.getElementById('result');
-        const errorDiv = document.getElementById('error-msg');
+    // --- LÓGICA DE BÚSQUEDA ---
+    function searchStudent() {
+        const input = document.getElementById('input-code');
+        const errorDiv = document.getElementById('search-error');
+        const code = input.value.trim().toUpperCase();
+
+        // Reset UI
+        sectResult.classList.add('hidden');
+        errorDiv.style.display = 'none';
+
+        if(!code) {
+            errorDiv.innerText = "Por favor, ingresa un código.";
+            errorDiv.style.display = 'block';
+            return;
+        }
+
+        const data = DATABASE[code];
 
         if(data) {
-            document.getElementById('res-name').innerText = data.nombre;
-            document.getElementById('res-codes').innerText = data.codigos;
-            
+            // Llenar datos
+            document.getElementById('res-name').innerText = data.name;
+            document.getElementById('res-codes').innerText = data.codes;
+
             // Matrícula
             document.getElementById('res-mat-grupo').innerText = data.mat.g || "-";
-            document.getElementById('res-mat-fecha').innerText = (data.mat.f || "-") + " " + (data.mat.h || "");
-            
+            document.getElementById('res-mat-fecha').innerText = data.mat.d || "-";
+            document.getElementById('res-mat-hora').innerText = data.mat.h || "-";
+
             // PH
             document.getElementById('res-ph-turno').innerText = data.ph.t || "-";
-            document.getElementById('res-ph-fecha').innerText = (data.ph.f || "-") + " " + (data.ph.h || "");
+            document.getElementById('res-ph-fecha').innerText = data.ph.d || "-";
+            document.getElementById('res-ph-hora').innerText = data.ph.h || "-";
 
-            resultDiv.style.display = "block";
-            errorDiv.style.display = "none";
+            // Mostrar
+            sectResult.classList.remove('hidden');
         } else {
-            resultDiv.style.display = "none";
-            errorDiv.style.display = "block";
-            errorDiv.innerText = "No se encontró información para el código: " + codigo;
+            errorDiv.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> No se encontró el código <strong>${code}</strong> en la base cargada.`;
+            errorDiv.style.display = 'block';
         }
     }
 
-    // Helpers para limpiar fechas de Excel
-    function formatearFecha(val) {
-        if(!val) return "";
-        if(String(val).includes("/")) return val; // Ya es texto
+    // --- REINICIAR APP ---
+    function resetApp() {
+        // Limpiar datos
+        DATABASE = {};
+        document.getElementById('input-code').value = '';
+        document.getElementById('search-error').style.display = 'none';
+        fileInput.value = ''; // Reset input file
+
+        // Cambiar vistas
+        sectResult.classList.add('hidden');
+        sectSearch.classList.add('hidden');
+        btnReset.classList.add('hidden');
+        sectUpload.classList.remove('hidden');
+    }
+
+    // --- HELPERS ---
+    document.getElementById('input-code').addEventListener('keypress', (e) => {
+        if(e.key === 'Enter') searchStudent();
+    });
+
+    function formatExcelDate(val) {
+        if(!val) return "-";
+        if(String(val).includes("/")) return val;
         if(!isNaN(val)) {
-            const date = XLSX.SSF.parse_date_code(val);
-            return `${date.d}/${date.m}/${date.y}`;
+            const d = XLSX.SSF.parse_date_code(val);
+            return `${d.d}/${d.m}/${d.y}`;
         }
         return val;
     }
 
-    function formatearHora(val) {
-        if(!val) return "";
+    function formatExcelTime(val) {
+        if(!val) return "-";
         if(String(val).includes(":")) return val;
         if(typeof val === 'number') {
-            const totalSeconds = Math.floor(val * 86400);
-            const hours = Math.floor(totalSeconds / 3600);
-            const minutes = Math.floor((totalSeconds % 3600) / 60);
-            return `${hours.toString().padStart(2,'0')}:${minutes.toString().padStart(2,'0')}:00`;
+            const totalSec = Math.floor(val * 86400);
+            const hh = Math.floor(totalSec / 3600).toString().padStart(2,'0');
+            const mm = Math.floor((totalSec % 3600) / 60).toString().padStart(2,'0');
+            return `${hh}:${mm}:00`;
         }
         return val;
     }
-</script>
 
+</script>
 </body>
 </html>
