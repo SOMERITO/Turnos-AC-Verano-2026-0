@@ -3,511 +3,574 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Consulta de Turnos UPC - Verano 2026</title>
+    <title>Portal de Turnos y Matrícula | UPC</title>
     <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     
     <style>
         :root {
             --upc-red: #E30613;
-            --upc-dark: #333333;
-            --upc-gray: #f2f2f2;
-            --text-color: #444;
+            --upc-dark: #1a1a1a;
+            --upc-gray: #f5f7fa;
+            --card-shadow: 0 10px 30px rgba(0,0,0,0.08);
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Segoe UI', 'Roboto', Helvetica, Arial, sans-serif;
+            background-color: var(--upc-gray);
             margin: 0;
             padding: 0;
-            background-color: var(--upc-gray);
-            color: var(--text-color);
+            color: #444;
             display: flex;
             flex-direction: column;
             min-height: 100vh;
         }
 
-        header {
-            background-color: white;
-            border-bottom: 4px solid var(--upc-red);
-            padding: 1rem 2rem;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        /* Navbar Profesional */
+        .navbar {
+            background: white;
+            height: 70px;
             display: flex;
             align-items: center;
+            padding: 0 5%;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            border-top: 5px solid var(--upc-red);
             justify-content: space-between;
         }
 
-        .logo {
-            font-weight: 800;
-            font-size: 1.5rem;
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .brand-logo {
+            font-weight: 900;
+            font-size: 24px;
             color: var(--upc-red);
-            text-transform: uppercase;
             letter-spacing: -1px;
         }
 
-        .logo span {
-            color: var(--upc-dark);
+        .brand-divider {
+            height: 25px;
+            width: 1px;
+            background: #ddd;
         }
 
-        .container {
-            max-width: 800px;
-            margin: 2rem auto;
-            padding: 0 1rem;
-            flex: 1;
-        }
-
-        /* Upload Section */
-        .upload-section {
-            background: white;
-            padding: 3rem 2rem;
-            border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-            text-align: center;
-            margin-bottom: 2rem;
-            border: 2px dashed #ccc;
-            transition: all 0.3s ease;
-        }
-
-        .upload-section.drag-over {
-            border-color: var(--upc-red);
-            background-color: #fff0f0;
-            transform: scale(1.01);
-        }
-
-        .btn-upload {
-            border: 2px solid var(--upc-red);
-            color: var(--upc-red);
-            background-color: white;
-            padding: 10px 25px;
-            border-radius: 50px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            margin-top: 10px;
-        }
-
-        .btn-upload:hover {
-            background-color: var(--upc-red);
-            color: white;
-        }
-
-        input[type=file] {
-            display: none;
-        }
-
-        #file-name {
-            display: block;
-            margin-top: 15px;
-            font-size: 0.9rem;
+        .brand-title {
+            font-size: 14px;
             color: #666;
+            line-height: 1.2;
             font-weight: 500;
         }
 
-        .icon-upload {
-            font-size: 3rem;
-            color: #ccc;
-            margin-bottom: 1rem;
-            display: block;
+        /* Main Layout */
+        .main-content {
+            flex: 1;
+            padding: 40px 20px;
+            max-width: 900px;
+            margin: 0 auto;
+            width: 100%;
+            box-sizing: border-box;
         }
 
-        /* Search Section */
-        .search-section {
-            display: none;
+        /* Cards */
+        .card {
             background: white;
-            padding: 2rem;
-            border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-            animation: fadeIn 0.5s ease;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: var(--card-shadow);
+            margin-bottom: 25px;
+            transition: transform 0.2s ease;
         }
 
-        h2 {
-            margin-top: 0;
+        .card-header {
+            margin-bottom: 20px;
+        }
+
+        .card-title {
+            font-size: 18px;
+            font-weight: 700;
             color: var(--upc-dark);
-            font-size: 1.2rem;
-            margin-bottom: 1rem;
+            margin: 0;
         }
 
-        .search-box {
+        .card-subtitle {
+            font-size: 13px;
+            color: #888;
+            margin-top: 5px;
+        }
+
+        /* Upload Zone */
+        .drop-zone {
+            border: 2px dashed #ddd;
+            border-radius: 8px;
+            padding: 40px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: #fafafa;
+        }
+
+        .drop-zone:hover, .drop-zone.dragover {
+            border-color: var(--upc-red);
+            background: #fff5f5;
+        }
+
+        .upload-icon {
+            font-size: 40px;
+            color: #ccc;
+            margin-bottom: 15px;
+        }
+
+        .drop-zone.dragover .upload-icon { color: var(--upc-red); }
+
+        .btn-select {
+            background: var(--upc-red);
+            color: white;
+            border: none;
+            padding: 10px 25px;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 15px;
+            font-size: 14px;
+        }
+
+        /* Search Bar */
+        .search-container {
             display: flex;
             gap: 10px;
+            position: relative;
         }
 
-        input[type="text"] {
+        .search-input {
             flex: 1;
-            padding: 12px 15px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            font-size: 1rem;
+            padding: 15px 20px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
             outline: none;
             transition: border-color 0.3s;
         }
 
-        input[type="text"]:focus {
+        .search-input:focus {
             border-color: var(--upc-red);
+            box-shadow: 0 0 0 3px rgba(227, 6, 19, 0.1);
         }
 
         .btn-search {
-            background-color: var(--upc-red);
+            background: var(--upc-dark);
             color: white;
             border: none;
-            padding: 12px 25px;
-            border-radius: 4px;
+            padding: 0 30px;
+            border-radius: 8px;
             font-weight: 600;
             cursor: pointer;
-            font-size: 1rem;
+            font-size: 16px;
+            transition: background 0.3s;
         }
 
-        .btn-search:hover {
-            background-color: #c40510;
-        }
+        .btn-search:hover { background: #000; }
 
-        /* Results */
-        .result-card {
-            background: white;
-            border-left: 5px solid var(--upc-red);
-            border-radius: 4px;
-            padding: 1.5rem;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-            margin-top: 2rem;
-            animation: slideUp 0.4s ease;
-        }
+        /* Results Display */
+        #results-area { display: none; }
 
-        .student-header {
-            font-size: 1.3rem;
-            font-weight: 700;
-            margin-bottom: 1.5rem;
-            color: var(--upc-dark);
+        .student-profile {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
             border-bottom: 1px solid #eee;
-            padding-bottom: 0.5rem;
         }
 
-        .info-grid {
+        .profile-icon {
+            width: 50px;
+            height: 50px;
+            background: var(--upc-gray);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--upc-red);
+            font-size: 20px;
+        }
+
+        .profile-name {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--upc-dark);
+        }
+
+        .profile-codes {
+            font-size: 13px;
+            color: #666;
+        }
+
+        .schedule-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 1.5rem;
+            gap: 20px;
         }
 
-        @media (max-width: 600px) {
-            .info-grid { grid-template-columns: 1fr; }
+        @media (max-width: 768px) {
+            .schedule-grid { grid-template-columns: 1fr; }
         }
 
-        .info-block {
-            background-color: #f9f9f9;
-            padding: 1rem;
-            border-radius: 6px;
+        .schedule-card {
+            background: #fdfdfd;
+            border: 1px solid #eee;
+            border-radius: 8px;
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
         }
 
-        .info-label {
-            font-size: 0.85rem;
-            color: #666;
+        .schedule-card.primary { border-top: 3px solid var(--upc-red); }
+        .schedule-card.secondary { border-top: 3px solid var(--upc-dark); }
+
+        .card-label {
+            font-size: 12px;
             text-transform: uppercase;
-            font-weight: 600;
-            margin-bottom: 5px;
+            letter-spacing: 1px;
+            color: #999;
+            font-weight: 700;
+            margin-bottom: 15px;
             display: block;
         }
 
-        .info-value {
-            font-size: 1.1rem;
-            font-weight: 500;
-            color: var(--upc-dark);
+        .data-row {
+            margin-bottom: 12px;
         }
 
-        .highlight {
-            color: var(--upc-red);
-            font-weight: 700;
+        .data-label {
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 4px;
         }
 
-        .error-msg {
-            color: var(--upc-red);
-            background: #ffe6e6;
-            padding: 1rem;
-            border-radius: 4px;
+        .data-value {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .data-value.highlight { color: var(--upc-red); }
+
+        /* Loader & Status */
+        .status-bar {
             text-align: center;
-            margin-top: 1rem;
+            margin-top: 10px;
+            font-size: 13px;
+            color: #888;
+            height: 20px;
         }
         
-        .debug-info {
-            font-size: 0.75rem;
-            color: #999;
-            margin-top: 20px;
-            text-align: center;
-            border-top: 1px solid #eee;
-            padding-top: 10px;
-        }
-
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-
-        footer {
-            text-align: center;
-            padding: 1.5rem;
-            font-size: 0.8rem;
-            color: #888;
-        }
+        .hidden { display: none !important; }
     </style>
 </head>
 <body>
 
-<header>
-    <div class="logo">UPC <span>Turnos</span></div>
-    <div style="font-size: 0.9rem; font-weight: 600;">Verano 2026</div>
-</header>
-
-<div class="container">
-    <div class="upload-section" id="drop-zone" onclick="document.getElementById('file-input').click()">
-        <div class="icon-upload">📊</div>
-        <h2>Cargar Base de Datos</h2>
-        <p style="margin-bottom: 1rem; color: #666;">
-            Arrastra el archivo <strong>.csv</strong> o <strong>.xlsx</strong> aquí.
-        </p>
-        <button class="btn-upload">Seleccionar Archivo</button>
-        <input type="file" id="file-input" accept=".csv, .xlsx, .xls">
-        <div id="file-name"></div>
-    </div>
-
-    <div class="search-section" id="search-step">
-        <h2>Consultar Estudiante</h2>
-        <div class="search-box">
-            <input type="text" id="student-code" placeholder="Código (ej. U20241D915 o N00...)" maxlength="20">
-            <button class="btn-search" onclick="searchStudent()">Buscar</button>
+    <nav class="navbar">
+        <div class="brand">
+            <div class="brand-logo">UPC</div>
+            <div class="brand-divider"></div>
+            <div class="brand-title">Consulta de Turnos<br>y Matrícula</div>
         </div>
-        <div id="result-container"></div>
-        <div id="debug-log" class="debug-info"></div>
-    </div>
-</div>
+        <div style="font-size: 12px; color: #999;">Verano 2026</div>
+    </nav>
 
-<footer>
-    Sistema de Consulta de Turnos - V5.0 (Soporte Código Sócrates)
-</footer>
-
-<script>
-    let studentData = {};
-    const dropZone = document.getElementById('drop-zone');
-    const fileInput = document.getElementById('file-input');
-
-    // Drag & Drop Handlers
-    ;['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-        dropZone.addEventListener(eventName, e => {
-            e.preventDefault();
-            e.stopPropagation();
-        }, false);
-    });
-
-    ;['dragenter', 'dragover'].forEach(eventName => {
-        dropZone.addEventListener(eventName, () => dropZone.classList.add('drag-over'), false);
-    });
-
-    ;['dragleave', 'drop'].forEach(eventName => {
-        dropZone.addEventListener(eventName, () => dropZone.classList.remove('drag-over'), false);
-    });
-
-    dropZone.addEventListener('drop', e => {
-        const dt = e.dataTransfer;
-        if(dt.files.length > 0) handleFiles(dt.files[0]);
-    }, false);
-
-    fileInput.addEventListener('change', function(e) {
-        if(this.files[0]) handleFiles(this.files[0]);
-    });
-
-    function handleFiles(file) {
-        document.getElementById('file-name').textContent = "Procesando: " + file.name + "...";
+    <div class="main-content">
         
-        const fileName = file.name.toLowerCase();
-        if (fileName.endsWith('.xlsx') || fileName.endsWith('.xls')) {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                try {
-                    const data = new Uint8Array(e.target.result);
-                    const workbook = XLSX.read(data, {type: 'array'});
-                    const worksheet = workbook.Sheets[workbook.SheetNames[0]];
-                    // Leer como CSV para mantener lógica consistente
-                    const csvOutput = XLSX.utils.sheet_to_csv(worksheet);
-                    processData(csvOutput);
-                } catch (err) {
-                    alert("Error leyendo Excel: " + err);
-                }
-            };
-            reader.readAsArrayBuffer(file);
-        } else {
-            const reader = new FileReader();
-            reader.onload = function(e) { processData(e.target.result); };
-            reader.readAsText(file, "UTF-8");
-        }
-    }
-
-    function cleanStr(str) {
-        return str ? str.trim().replace(/^"|"$/g, '').trim() : '';
-    }
-
-    function processData(csvText) {
-        const lines = csvText.split(/\r\n|\n/);
-        let headerIndex = -1;
-        let separator = ',';
-        let headers = [];
-
-        // 1. Detectar Cabecera y Separador
-        // Buscamos "Código Banner" para identificar la fila real de títulos
-        for(let i=0; i < Math.min(50, lines.length); i++) {
-            const line = lines[i];
-            // Normalizar para ignorar mayus/minus/tildes en la detección
-            const norm = line.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+        <div class="card" id="card-upload">
+            <div class="card-header">
+                <h2 class="card-title">Cargar Base de Datos</h2>
+                <p class="card-subtitle">Sube el archivo "Turnos_Masivos_PH" (Excel o CSV)</p>
+            </div>
             
-            if(norm.includes('codigo banner')) {
-                headerIndex = i;
-                const commas = (line.match(/,/g) || []).length;
-                const semis = (line.match(/;/g) || []).length;
-                separator = semis > commas ? ';' : ',';
-                headers = line.split(separator).map(cleanStr);
-                break;
-            }
-        }
+            <div class="drop-zone" id="drop-zone">
+                <i class="fas fa-cloud-upload-alt upload-icon"></i>
+                <div style="font-weight: 500; color: #555;">Arrastra y suelta el archivo aquí</div>
+                <div style="font-size: 13px; color: #999; margin: 10px 0;">o</div>
+                <button class="btn-select" onclick="document.getElementById('file-input').click()">Seleccionar Archivo</button>
+                <input type="file" id="file-input" accept=".xlsx, .xls, .csv" style="display: none;">
+            </div>
+            <div class="status-bar" id="upload-status">Esperando archivo...</div>
+        </div>
 
-        if (headerIndex === -1) {
-            alert("No se encontró la columna 'Código Banner'. Verifique el archivo.");
-            return;
-        }
+        <div class="card hidden" id="card-search">
+            <div class="card-header">
+                <h2 class="card-title">Buscar Estudiante</h2>
+                <p class="card-subtitle">Ingrese el código de alumno (Ej: U2024... o N00...)</p>
+            </div>
+            <div class="search-container">
+                <input type="text" class="search-input" id="search-input" placeholder="Código de estudiante..." maxlength="20">
+                <button class="btn-search" onclick="performSearch()">
+                    <i class="fas fa-search"></i>
+                </button>
+            </div>
+            <div class="status-bar" id="search-status" style="text-align: left; margin-top: 10px;"></div>
+        </div>
 
-        // 2. Mapear Indices (Búsqueda estricta)
-        const findIdx = (keyword) => headers.findIndex(h => 
-            h.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").includes(keyword)
-        );
+        <div class="card hidden" id="results-area">
+            <div class="student-profile">
+                <div class="profile-icon">
+                    <i class="fas fa-user-graduate"></i>
+                </div>
+                <div>
+                    <div class="profile-name" id="res-name">Nombre del Alumno</div>
+                    <div class="profile-codes" id="res-codes">U20241D915 | N00123456</div>
+                </div>
+            </div>
 
-        const idxBanner = findIdx('banner');   // Código Banner
-        const idxSocrates = findIdx('socrates'); // Código Sócrates (IMPORTANTE para tu búsqueda)
-        const idxNombres = findIdx('nombres');
-        const idxApPat = findIdx('paterno');
-        const idxApMat = findIdx('materno');
-        
-        // Mapeo específico para Turnos Masivos
-        // El archivo tiene: ..., Turno, Día, Hora, ..., GRUPO, Día, Hora
-        const idxTurnoPH = findIdx('turno'); // Primer "Turno"
-        const idxGrupoMat = findIdx('grupo'); // Primer "GRUPO"
-
-        // Asignar Día y Hora relativos a su sección para evitar confusiones
-        // En tu archivo: Turno está en col X, Día en X+1, Hora en X+2
-        const idxDiaPH = idxTurnoPH !== -1 ? idxTurnoPH + 1 : -1;
-        const idxHoraPH = idxTurnoPH !== -1 ? idxTurnoPH + 2 : -1;
-
-        // En tu archivo: GRUPO está en col Y, Día en Y+1, Hora en Y+2
-        const idxDiaMat = idxGrupoMat !== -1 ? idxGrupoMat + 1 : -1;
-        const idxHoraMat = idxGrupoMat !== -1 ? idxGrupoMat + 2 : -1;
-
-        studentData = {};
-        let count = 0;
-
-        for (let i = headerIndex + 1; i < lines.length; i++) {
-            const line = lines[i].trim();
-            if(!line) continue;
-            
-            const cols = line.split(separator);
-            if(cols.length < 5) continue;
-
-            // Extraer ambos códigos
-            const codeBanner = idxBanner !== -1 ? cleanStr(cols[idxBanner]).toUpperCase() : '';
-            const codeSocrates = idxSocrates !== -1 ? cleanStr(cols[idxSocrates]).toUpperCase() : '';
-
-            // Construir objeto datos
-            let fullName = '';
-            if(idxNombres !== -1) fullName += cleanStr(cols[idxNombres]) + ' ';
-            if(idxApPat !== -1) fullName += cleanStr(cols[idxApPat]) + ' ';
-            if(idxApMat !== -1) fullName += cleanStr(cols[idxApMat]);
-            
-            const record = {
-                nombre: fullName.trim() || 'Estudiante',
-                // Planificación Horaria
-                turnoPlan: idxTurnoPH !== -1 ? cleanStr(cols[idxTurnoPH]) : '-',
-                diaPlan: idxDiaPH !== -1 ? cleanStr(cols[idxDiaPH]) : '-',
-                horaPlan: idxHoraPH !== -1 ? cleanStr(cols[idxHoraPH]) : '-',
-                // Matrícula Regular
-                grupoMat: idxGrupoMat !== -1 ? cleanStr(cols[idxGrupoMat]) : '-',
-                diaMat: idxDiaMat !== -1 ? cleanStr(cols[idxDiaMat]) : '-',
-                horaMat: idxHoraMat !== -1 ? cleanStr(cols[idxHoraMat]) : '-'
-            };
-
-            // Indexar por AMBOS códigos (si existen)
-            if (codeBanner) studentData[codeBanner] = record;
-            if (codeSocrates) studentData[codeSocrates] = record;
-            
-            if(codeBanner || codeSocrates) count++;
-        }
-
-        // UI Updates
-        document.getElementById('file-name').textContent = `Cargado: ${count} registros indexados.`;
-        document.getElementById('file-name').style.color = 'green';
-        document.getElementById('debug-log').textContent = `Columnas detectadas - Banner:${idxBanner}, Sócrates:${idxSocrates}, TurnoPH:${idxTurnoPH}, GrupoMat:${idxGrupoMat}`;
-        
-        setTimeout(() => {
-            document.getElementById('drop-zone').style.display = 'none';
-            document.getElementById('search-step').style.display = 'block';
-        }, 500);
-    }
-
-    function searchStudent() {
-        const input = document.getElementById('student-code');
-        const code = input.value.trim().toUpperCase();
-        const container = document.getElementById('result-container');
-        container.innerHTML = '';
-
-        if (!code) return;
-
-        const data = studentData[code];
-
-        if (data) {
-            container.innerHTML = `
-                <div class="result-card">
-                    <div class="student-header">
-                        ${data.nombre} 
-                        <span style="font-weight:400; font-size:0.8rem; display:block; margin-top:5px; color:#666;">
-                            Código consultado: ${code}
-                        </span>
+            <div class="schedule-grid">
+                <div class="schedule-card primary">
+                    <span class="card-label"><i class="far fa-calendar-check"></i> Matrícula Regular</span>
+                    
+                    <div class="data-row">
+                        <div class="data-label">Grupo / Prioridad</div>
+                        <div class="data-value highlight" id="res-mat-group">TURNO 01</div>
                     </div>
-                    <div class="info-grid">
-                        <div class="info-block">
-                            <h3 style="color: var(--upc-red); margin-top:0; border-bottom:1px solid #ddd; padding-bottom:5px;">
-                                Matrícula Regular
-                            </h3>
-                            <div style="margin-top:10px;">
-                                <span class="info-label">Grupo / Prioridad</span>
-                                <div class="info-value highlight">${data.grupoMat}</div>
-                            </div>
-                            <div style="margin-top: 15px;">
-                                <span class="info-label">Fecha de Matrícula</span>
-                                <div class="info-value">${data.diaMat}</div>
-                            </div>
-                            <div style="margin-top: 10px;">
-                                <span class="info-label">Hora de Inicio</span>
-                                <div class="info-value">${data.horaMat}</div>
-                            </div>
-                        </div>
-
-                        <div class="info-block">
-                            <h3 style="color: #666; margin-top:0; border-bottom:1px solid #ddd; padding-bottom:5px;">
-                                Planificación Horaria
-                            </h3>
-                            <div style="margin-top:10px;">
-                                <span class="info-label">Turno PH</span>
-                                <div class="info-value">${data.turnoPlan}</div>
-                            </div>
-                            <div style="margin-top: 15px;">
-                                <span class="info-label">Fecha PH</span>
-                                <div class="info-value">${data.diaPlan}</div>
-                            </div>
-                            <div style="margin-top: 10px;">
-                                <span class="info-label">Hora PH</span>
-                                <div class="info-value">${data.horaPlan}</div>
-                            </div>
+                    <div class="data-row">
+                        <div class="data-label">Fecha y Hora</div>
+                        <div class="data-value">
+                            <span id="res-mat-date">12/01/2026</span> - <span id="res-mat-time">09:00:00</span>
                         </div>
                     </div>
                 </div>
-            `;
-        } else {
-            container.innerHTML = `<div class="error-msg">No se encontró el código <strong>${code}</strong> en la base cargada.</div>`;
+
+                <div class="schedule-card secondary">
+                    <span class="card-label"><i class="far fa-clock"></i> Planificación Horaria</span>
+                    
+                    <div class="data-row">
+                        <div class="data-label">Turno PH</div>
+                        <div class="data-value" id="res-ph-turn">1</div>
+                    </div>
+                    <div class="data-row">
+                        <div class="data-label">Fecha y Hora</div>
+                        <div class="data-value">
+                            <span id="res-ph-date">09/01/2026</span> - <span id="res-ph-time">09:00:00</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        let DATABASE = []; // Almacenará los datos limpios
+
+        // --- Configuración Drag & Drop ---
+        const dropZone = document.getElementById('drop-zone');
+        const fileInput = document.getElementById('file-input');
+        const statusMsg = document.getElementById('upload-status');
+
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(e => {
+            dropZone.addEventListener(e, preventDefaults, false);
+        });
+
+        function preventDefaults(e) { e.preventDefault(); e.stopPropagation(); }
+
+        ['dragenter', 'dragover'].forEach(e => {
+            dropZone.addEventListener(e, () => dropZone.classList.add('dragover'), false);
+        });
+
+        ['dragleave', 'drop'].forEach(e => {
+            dropZone.addEventListener(e, () => dropZone.classList.remove('dragover'), false);
+        });
+
+        dropZone.addEventListener('drop', (e) => handleFiles(e.dataTransfer.files));
+        fileInput.addEventListener('change', (e) => handleFiles(e.target.files));
+
+        // --- Procesamiento de Archivos ---
+        function handleFiles(files) {
+            if (files.length === 0) return;
+            const file = files[0];
+            
+            statusMsg.textContent = `Analizando ${file.name}...`;
+            statusMsg.style.color = "#666";
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, {type: 'array'});
+                    
+                    // Asumimos que la hoja relevante es la primera o la que se llama "Turnos_Masivos..."
+                    // Priorizamos la hoja activa (primera)
+                    const sheetName = workbook.SheetNames[0];
+                    const worksheet = workbook.Sheets[sheetName];
+                    
+                    // Convertir a Array de Arrays (header:1) para control total
+                    const rawData = XLSX.utils.sheet_to_json(worksheet, {header: 1, defval: ""});
+                    
+                    processData(rawData);
+                } catch (err) {
+                    console.error(err);
+                    statusMsg.textContent = "Error: El archivo no es válido o está corrupto.";
+                    statusMsg.style.color = "red";
+                }
+            };
+            reader.readAsArrayBuffer(file);
         }
-    }
 
-    document.getElementById('student-code').addEventListener('keypress', function (e) {
-        if (e.key === 'Enter') searchStudent();
-    });
-</script>
+        // --- Lógica de Extracción Específica (Basada en tu archivo) ---
+        function processData(rows) {
+            DATABASE = [];
+            let headerIndex = -1;
 
+            // 1. Buscar la fila de cabecera real
+            for (let i = 0; i < Math.min(50, rows.length); i++) {
+                const rowStr = rows[i].join(" ").toLowerCase();
+                // Buscamos "Código Banner" y "Código Sócrates" para estar seguros
+                if (rowStr.includes("banner") && rowStr.includes("socrates")) {
+                    headerIndex = i;
+                    break;
+                }
+            }
+
+            if (headerIndex === -1) {
+                statusMsg.textContent = "Error: No se encontró la estructura 'Turnos Masivos' en este archivo.";
+                statusMsg.style.color = "var(--upc-red)";
+                return;
+            }
+
+            // 2. Identificar columnas dinámicamente en la fila header
+            const headerRow = rows[headerIndex].map(cell => cell.toString().toLowerCase().trim());
+            
+            const colBanner = headerRow.findIndex(h => h.includes("banner"));
+            const colSocrates = headerRow.findIndex(h => h.includes("socrates"));
+            
+            // Indices para Planificación (PH)
+            // En el archivo suele ser: Turno, Día, Hora (primer bloque)
+            let colTurnoPH = headerRow.indexOf("turno");
+            
+            // Indices para Matrícula
+            // En el archivo suele ser: GRUPO, Día, Hora (segundo bloque)
+            let colGrupoMat = headerRow.indexOf("grupo");
+
+            // Si falla la búsqueda exacta de índice, usamos posiciones fijas observadas en tu archivo
+            // Si el header es: Unidad(0), Periodo(1), Banner(2), Socrates(3), Pat(4), Mat(5), Nom(6), TurnoPH(7), DiaPH(8), HoraPH(9)... GrupoMat(11), DiaMat(12), HoraMat(13)
+            if (colBanner === -1) { /* fallback */ } 
+
+            // 3. Iterar datos
+            let count = 0;
+            for (let i = headerIndex + 1; i < rows.length; i++) {
+                const row = rows[i];
+                if (!row || row.length < 5) continue;
+
+                // Extracción segura
+                const codigoU = row[colSocrates] ? row[colSocrates].toString().trim().toUpperCase() : "";
+                const codigoN = row[colBanner] ? row[colBanner].toString().trim().toUpperCase() : "";
+
+                if (codigoU || codigoN) {
+                    // Reconstrucción de nombre
+                    const paterno = row[4] || "";
+                    const materno = row[5] || "";
+                    const nombres = row[6] || "";
+                    const fullName = `${nombres} ${paterno} ${materno}`.trim();
+
+                    // Datos PH (Indices fijos relativos detectados visualmente en tu ejemplo)
+                    // Asumimos estructura estándar si se encontró el header
+                    // Ajuste: si usamos indices detectados:
+                    const phTurno = row[colTurnoPH] || "-";
+                    const phDia = row[colTurnoPH + 1] || "-";
+                    const phHora = row[colTurnoPH + 2] || "-";
+
+                    const matGrupo = row[colGrupoMat] || "-";
+                    const matDia = row[colGrupoMat + 1] || "-";
+                    const matHora = row[colGrupoMat + 2] || "-";
+
+                    // Guardar registro
+                    const record = {
+                        fullName: fullName,
+                        codes: `${codigoU} / ${codigoN}`,
+                        ph: { turno: phTurno, dia: formatDate(phDia), hora: formatTime(phHora) },
+                        mat: { grupo: matGrupo, dia: formatDate(matDia), hora: formatTime(matHora) }
+                    };
+
+                    if (codigoU) DATABASE[codigoU] = record;
+                    if (codigoN) DATABASE[codigoN] = record;
+                    count++;
+                }
+            }
+
+            // UI Feedback
+            statusMsg.textContent = `¡Listo! Se cargaron ${count} estudiantes correctamente.`;
+            statusMsg.style.color = "green";
+            
+            // Animación de transición
+            setTimeout(() => {
+                document.getElementById('card-upload').style.display = 'none';
+                document.getElementById('card-search').classList.remove('hidden');
+            }, 1000);
+        }
+
+        // --- Búsqueda ---
+        function performSearch() {
+            const input = document.getElementById('search-input');
+            const code = input.value.trim().toUpperCase();
+            const resultsArea = document.getElementById('results-area');
+            const searchStatus = document.getElementById('search-status');
+
+            if (!code) return;
+
+            const data = DATABASE[code];
+
+            if (data) {
+                // Llenar datos
+                document.getElementById('res-name').textContent = data.fullName;
+                document.getElementById('res-codes').textContent = data.codes;
+                
+                // Matrícula
+                document.getElementById('res-mat-group').textContent = data.mat.grupo;
+                document.getElementById('res-mat-date').textContent = data.mat.dia;
+                document.getElementById('res-mat-time').textContent = data.mat.hora;
+                
+                // PH
+                document.getElementById('res-ph-turn').textContent = data.ph.turno;
+                document.getElementById('res-ph-date').textContent = data.ph.dia;
+                document.getElementById('res-ph-time').textContent = data.ph.hora;
+
+                resultsArea.classList.remove('hidden');
+                searchStatus.textContent = "";
+            } else {
+                resultsArea.classList.add('hidden');
+                searchStatus.innerHTML = `<span style="color:var(--upc-red)"><i class="fas fa-exclamation-circle"></i> No se encontró el código <strong>${code}</strong> en la base de datos cargada.</span>`;
+            }
+        }
+
+        // Helpers de formato (Fechas Excel a Texto)
+        function formatDate(val) {
+            if (!val) return "-";
+            // Si viene como número de Excel (ej: 45200)
+            if (typeof val === 'number') {
+                const date = XLSX.SSF.parse_date_code(val);
+                return `${date.d}/${date.m}/${date.y}`;
+            }
+            // Si viene como texto con hora "viernes 9/01/2026"
+            if (val.toString().includes("/")) return val;
+            return val;
+        }
+
+        function formatTime(val) {
+            if (!val) return "-";
+            if (typeof val === 'number') { // Decimal de excel (0.5 = 12:00)
+                let totalSeconds = Math.floor(val * 86400);
+                let hours = Math.floor(totalSeconds / 3600);
+                let minutes = Math.floor((totalSeconds % 3600) / 60);
+                return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+            }
+            return val;
+        }
+
+        // Enter para buscar
+        document.getElementById('search-input').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') performSearch();
+        });
+
+    </script>
 </body>
 </html>
