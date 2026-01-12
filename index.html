@@ -3,574 +3,457 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Portal de Turnos y Matrícula | UPC</title>
+    <title>Consulta de Turnos UPC | Verano 2026</title>
     <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
     
     <style>
         :root {
             --upc-red: #E30613;
-            --upc-dark: #1a1a1a;
-            --upc-gray: #f5f7fa;
-            --card-shadow: 0 10px 30px rgba(0,0,0,0.08);
+            --upc-dark: #121212;
+            --upc-gray: #f8f9fa;
+            --card-shadow: 0 4px 20px rgba(0,0,0,0.08);
         }
 
         body {
-            font-family: 'Segoe UI', 'Roboto', Helvetica, Arial, sans-serif;
+            font-family: 'Roboto', sans-serif;
             background-color: var(--upc-gray);
             margin: 0;
             padding: 0;
-            color: #444;
+            color: #333;
             display: flex;
             flex-direction: column;
             min-height: 100vh;
         }
 
-        /* Navbar Profesional */
+        /* Navbar */
         .navbar {
             background: white;
-            height: 70px;
+            height: 80px;
             display: flex;
             align-items: center;
-            padding: 0 5%;
+            padding: 0 10%;
             box-shadow: 0 2px 10px rgba(0,0,0,0.05);
             border-top: 5px solid var(--upc-red);
-            justify-content: space-between;
         }
 
-        .brand {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .brand-logo {
+        .logo {
+            font-size: 28px;
             font-weight: 900;
-            font-size: 24px;
             color: var(--upc-red);
             letter-spacing: -1px;
+            margin-right: 15px;
         }
 
-        .brand-divider {
-            height: 25px;
-            width: 1px;
-            background: #ddd;
+        .logo-text {
+            border-left: 1px solid #ddd;
+            padding-left: 15px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
         }
 
-        .brand-title {
-            font-size: 14px;
-            color: #666;
-            line-height: 1.2;
-            font-weight: 500;
-        }
+        .logo-text h1 { margin: 0; font-size: 16px; color: var(--upc-dark); font-weight: 700; }
+        .logo-text p { margin: 0; font-size: 12px; color: #777; }
 
-        /* Main Layout */
-        .main-content {
+        /* Contenedor Principal */
+        .main-container {
             flex: 1;
-            padding: 40px 20px;
-            max-width: 900px;
-            margin: 0 auto;
-            width: 100%;
-            box-sizing: border-box;
+            width: 90%;
+            max-width: 1000px;
+            margin: 40px auto;
         }
 
-        /* Cards */
+        /* Tarjetas */
         .card {
             background: white;
-            border-radius: 12px;
-            padding: 30px;
+            border-radius: 16px;
+            padding: 40px;
             box-shadow: var(--card-shadow);
-            margin-bottom: 25px;
-            transition: transform 0.2s ease;
-        }
-
-        .card-header {
+            transition: all 0.3s ease;
             margin-bottom: 20px;
         }
 
-        .card-title {
-            font-size: 18px;
-            font-weight: 700;
-            color: var(--upc-dark);
-            margin: 0;
-        }
-
-        .card-subtitle {
-            font-size: 13px;
-            color: #888;
-            margin-top: 5px;
-        }
-
-        /* Upload Zone */
-        .drop-zone {
+        /* Zona de Carga */
+        .upload-area {
             border: 2px dashed #ddd;
-            border-radius: 8px;
-            padding: 40px;
+            border-radius: 12px;
+            padding: 50px 20px;
             text-align: center;
             cursor: pointer;
-            transition: all 0.3s;
+            transition: 0.3s;
             background: #fafafa;
         }
 
-        .drop-zone:hover, .drop-zone.dragover {
+        .upload-area:hover {
             border-color: var(--upc-red);
             background: #fff5f5;
         }
 
-        .upload-icon {
-            font-size: 40px;
-            color: #ccc;
-            margin-bottom: 15px;
-        }
+        .upload-icon { font-size: 48px; color: #ccc; margin-bottom: 15px; }
+        .upload-area.active .upload-icon { color: var(--upc-red); }
 
-        .drop-zone.dragover .upload-icon { color: var(--upc-red); }
-
-        .btn-select {
-            background: var(--upc-red);
+        .btn-upc {
+            background-color: var(--upc-red);
             color: white;
             border: none;
-            padding: 10px 25px;
-            border-radius: 6px;
+            padding: 12px 30px;
+            border-radius: 8px;
             font-weight: 600;
+            font-size: 16px;
             cursor: pointer;
-            margin-top: 15px;
-            font-size: 14px;
+            margin-top: 20px;
+            transition: background 0.2s;
         }
+        .btn-upc:hover { background-color: #c0040f; }
 
-        /* Search Bar */
-        .search-container {
+        /* Barra de Búsqueda */
+        .search-wrapper {
             display: flex;
-            gap: 10px;
-            position: relative;
+            gap: 15px;
+            margin-top: 10px;
         }
 
         .search-input {
             flex: 1;
-            padding: 15px 20px;
+            padding: 16px 20px;
             border: 1px solid #e0e0e0;
             border-radius: 8px;
-            font-size: 16px;
+            font-size: 18px;
             outline: none;
-            transition: border-color 0.3s;
+            transition: border 0.3s;
         }
+        .search-input:focus { border-color: var(--upc-red); }
 
-        .search-input:focus {
-            border-color: var(--upc-red);
-            box-shadow: 0 0 0 3px rgba(227, 6, 19, 0.1);
-        }
-
-        .btn-search {
-            background: var(--upc-dark);
-            color: white;
-            border: none;
-            padding: 0 30px;
-            border-radius: 8px;
-            font-weight: 600;
-            cursor: pointer;
-            font-size: 16px;
-            transition: background 0.3s;
-        }
-
-        .btn-search:hover { background: #000; }
-
-        /* Results Display */
-        #results-area { display: none; }
-
-        .student-profile {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            margin-bottom: 25px;
-            padding-bottom: 15px;
+        /* Resultados */
+        .student-header {
             border-bottom: 1px solid #eee;
+            padding-bottom: 20px;
+            margin-bottom: 25px;
         }
+        .student-name { font-size: 24px; font-weight: 700; color: var(--upc-dark); }
+        .student-codes { font-size: 14px; color: #666; margin-top: 5px; }
 
-        .profile-icon {
-            width: 50px;
-            height: 50px;
-            background: var(--upc-gray);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: var(--upc-red);
-            font-size: 20px;
-        }
-
-        .profile-name {
-            font-size: 20px;
-            font-weight: 700;
-            color: var(--upc-dark);
-        }
-
-        .profile-codes {
-            font-size: 13px;
-            color: #666;
-        }
-
-        .schedule-grid {
+        .info-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 20px;
+            gap: 30px;
         }
 
-        @media (max-width: 768px) {
-            .schedule-grid { grid-template-columns: 1fr; }
-        }
-
-        .schedule-card {
-            background: #fdfdfd;
+        .info-box {
+            background: #fff;
             border: 1px solid #eee;
-            border-radius: 8px;
-            padding: 20px;
+            border-radius: 12px;
+            padding: 25px;
             position: relative;
-            overflow: hidden;
         }
 
-        .schedule-card.primary { border-top: 3px solid var(--upc-red); }
-        .schedule-card.secondary { border-top: 3px solid var(--upc-dark); }
+        .info-box.ph { border-top: 4px solid #555; }
+        .info-box.mat { border-top: 4px solid var(--upc-red); }
 
-        .card-label {
-            font-size: 12px;
+        .box-title {
+            font-size: 14px;
+            font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 1px;
-            color: #999;
-            font-weight: 700;
-            margin-bottom: 15px;
-            display: block;
-        }
-
-        .data-row {
-            margin-bottom: 12px;
-        }
-
-        .data-label {
-            font-size: 13px;
-            color: #666;
-            margin-bottom: 4px;
-        }
-
-        .data-value {
-            font-size: 16px;
-            font-weight: 600;
-            color: #333;
-        }
-
-        .data-value.highlight { color: var(--upc-red); }
-
-        /* Loader & Status */
-        .status-bar {
-            text-align: center;
-            margin-top: 10px;
-            font-size: 13px;
-            color: #888;
-            height: 20px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
         
-        .hidden { display: none !important; }
+        .box-title.red { color: var(--upc-red); }
+        .box-title.dark { color: #555; }
+
+        .data-point { margin-bottom: 15px; }
+        .label { font-size: 12px; color: #888; display: block; margin-bottom: 4px; }
+        .value { font-size: 18px; font-weight: 600; color: #222; }
+        .value.big { font-size: 22px; }
+
+        .hidden { display: none; }
+        .fade-in { animation: fadeIn 0.5s ease-in; }
+
+        @media (max-width: 768px) {
+            .info-grid { grid-template-columns: 1fr; }
+            .navbar { padding: 0 5%; }
+        }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
 
     <nav class="navbar">
-        <div class="brand">
-            <div class="brand-logo">UPC</div>
-            <div class="brand-divider"></div>
-            <div class="brand-title">Consulta de Turnos<br>y Matrícula</div>
+        <div class="logo">UPC</div>
+        <div class="logo-text">
+            <h1>Portal de Turnos</h1>
+            <p>Matrícula & Planificación 2026</p>
         </div>
-        <div style="font-size: 12px; color: #999;">Verano 2026</div>
     </nav>
 
-    <div class="main-content">
+    <div class="main-container">
         
-        <div class="card" id="card-upload">
-            <div class="card-header">
-                <h2 class="card-title">Cargar Base de Datos</h2>
-                <p class="card-subtitle">Sube el archivo "Turnos_Masivos_PH" (Excel o CSV)</p>
+        <div id="step-upload" class="card">
+            <h2 style="margin-top:0;">Cargar Base de Datos</h2>
+            <p style="color:#666; margin-bottom: 30px;">
+                Por favor, sube el archivo Excel (<code>.xlsx</code>) o CSV proporcionado por la universidad.
+                El sistema detectará automáticamente la pestaña correcta.
+            </p>
+
+            <div class="upload-area" id="drop-area" onclick="document.getElementById('file-input').click()">
+                <i class="fa-solid fa-file-excel upload-icon"></i>
+                <div style="font-size: 18px; font-weight: 500;">Haz clic o arrastra el archivo aquí</div>
+                <div id="file-name-display" style="font-size: 14px; color: var(--upc-red); margin-top: 15px; font-weight: 600;"></div>
+            </div>
+            <input type="file" id="file-input" accept=".xlsx, .xls, .csv" style="display: none;">
+        </div>
+
+        <div id="step-search" class="card hidden">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px;">
+                <h2 style="margin:0;">Consultar Alumno</h2>
+                <button onclick="resetApp()" style="background:none; border:none; color:#999; cursor:pointer; font-size:14px; text-decoration:underline;">Cambiar archivo</button>
             </div>
             
-            <div class="drop-zone" id="drop-zone">
-                <i class="fas fa-cloud-upload-alt upload-icon"></i>
-                <div style="font-weight: 500; color: #555;">Arrastra y suelta el archivo aquí</div>
-                <div style="font-size: 13px; color: #999; margin: 10px 0;">o</div>
-                <button class="btn-select" onclick="document.getElementById('file-input').click()">Seleccionar Archivo</button>
-                <input type="file" id="file-input" accept=".xlsx, .xls, .csv" style="display: none;">
+            <div class="search-wrapper">
+                <input type="text" id="student-code" class="search-input" placeholder="Ingresa código (Ej: U2024... o N00...)" maxlength="15">
+                <button class="btn-upc" onclick="searchStudent()"><i class="fa-solid fa-magnifying-glass"></i> Buscar</button>
             </div>
-            <div class="status-bar" id="upload-status">Esperando archivo...</div>
+            <div id="search-error" style="color: var(--upc-red); margin-top: 10px; font-weight: 500; display: none;"></div>
         </div>
 
-        <div class="card hidden" id="card-search">
-            <div class="card-header">
-                <h2 class="card-title">Buscar Estudiante</h2>
-                <p class="card-subtitle">Ingrese el código de alumno (Ej: U2024... o N00...)</p>
+        <div id="result-container" class="hidden">
             </div>
-            <div class="search-container">
-                <input type="text" class="search-input" id="search-input" placeholder="Código de estudiante..." maxlength="20">
-                <button class="btn-search" onclick="performSearch()">
-                    <i class="fas fa-search"></i>
-                </button>
-            </div>
-            <div class="status-bar" id="search-status" style="text-align: left; margin-top: 10px;"></div>
-        </div>
-
-        <div class="card hidden" id="results-area">
-            <div class="student-profile">
-                <div class="profile-icon">
-                    <i class="fas fa-user-graduate"></i>
-                </div>
-                <div>
-                    <div class="profile-name" id="res-name">Nombre del Alumno</div>
-                    <div class="profile-codes" id="res-codes">U20241D915 | N00123456</div>
-                </div>
-            </div>
-
-            <div class="schedule-grid">
-                <div class="schedule-card primary">
-                    <span class="card-label"><i class="far fa-calendar-check"></i> Matrícula Regular</span>
-                    
-                    <div class="data-row">
-                        <div class="data-label">Grupo / Prioridad</div>
-                        <div class="data-value highlight" id="res-mat-group">TURNO 01</div>
-                    </div>
-                    <div class="data-row">
-                        <div class="data-label">Fecha y Hora</div>
-                        <div class="data-value">
-                            <span id="res-mat-date">12/01/2026</span> - <span id="res-mat-time">09:00:00</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="schedule-card secondary">
-                    <span class="card-label"><i class="far fa-clock"></i> Planificación Horaria</span>
-                    
-                    <div class="data-row">
-                        <div class="data-label">Turno PH</div>
-                        <div class="data-value" id="res-ph-turn">1</div>
-                    </div>
-                    <div class="data-row">
-                        <div class="data-label">Fecha y Hora</div>
-                        <div class="data-value">
-                            <span id="res-ph-date">09/01/2026</span> - <span id="res-ph-time">09:00:00</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
 
     </div>
 
-    <script>
-        let DATABASE = []; // Almacenará los datos limpios
+<script>
+    let STUDENT_DB = {};
+    const dropArea = document.getElementById('drop-area');
+    const fileInput = document.getElementById('file-input');
 
-        // --- Configuración Drag & Drop ---
-        const dropZone = document.getElementById('drop-zone');
-        const fileInput = document.getElementById('file-input');
-        const statusMsg = document.getElementById('upload-status');
+    // --- Manejo de Archivos (Drag & Drop) ---
+    ['dragenter', 'dragover'].forEach(e => dropArea.addEventListener(e, (ev) => {
+        ev.preventDefault();
+        dropArea.classList.add('active');
+    }));
+    
+    ['dragleave', 'drop'].forEach(e => dropArea.addEventListener(e, (ev) => {
+        ev.preventDefault();
+        dropArea.classList.remove('active');
+    }));
 
-        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(e => {
-            dropZone.addEventListener(e, preventDefaults, false);
-        });
+    dropArea.addEventListener('drop', (e) => handleFiles(e.dataTransfer.files[0]));
+    fileInput.addEventListener('change', (e) => handleFiles(e.target.files[0]));
 
-        function preventDefaults(e) { e.preventDefault(); e.stopPropagation(); }
+    function handleFiles(file) {
+        if(!file) return;
+        document.getElementById('file-name-display').textContent = "Procesando: " + file.name + "...";
+        
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, {type: 'array'});
+                processWorkbook(workbook);
+            } catch (err) {
+                alert("Error al leer el archivo. Asegúrate de que no esté dañado.");
+                console.error(err);
+            }
+        };
+        reader.readAsArrayBuffer(file);
+    }
 
-        ['dragenter', 'dragover'].forEach(e => {
-            dropZone.addEventListener(e, () => dropZone.classList.add('dragover'), false);
-        });
+    // --- LÓGICA CORE DE PROCESAMIENTO ---
+    function processWorkbook(workbook) {
+        STUDENT_DB = {};
+        let foundSheet = false;
+        let count = 0;
 
-        ['dragleave', 'drop'].forEach(e => {
-            dropZone.addEventListener(e, () => dropZone.classList.remove('dragover'), false);
-        });
+        // 1. Recorrer TODAS las hojas hasta encontrar la correcta
+        workbook.SheetNames.forEach(sheetName => {
+            if (foundSheet) return; // Si ya procesamos una, paramos
 
-        dropZone.addEventListener('drop', (e) => handleFiles(e.dataTransfer.files));
-        fileInput.addEventListener('change', (e) => handleFiles(e.target.files));
+            const worksheet = workbook.Sheets[sheetName];
+            // Convertir a JSON matriz (array de arrays) para control total de filas
+            const rows = XLSX.utils.sheet_to_json(worksheet, {header: 1, defval: ''});
 
-        // --- Procesamiento de Archivos ---
-        function handleFiles(files) {
-            if (files.length === 0) return;
-            const file = files[0];
-            
-            statusMsg.textContent = `Analizando ${file.name}...`;
-            statusMsg.style.color = "#666";
-
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                try {
-                    const data = new Uint8Array(e.target.result);
-                    const workbook = XLSX.read(data, {type: 'array'});
-                    
-                    // Asumimos que la hoja relevante es la primera o la que se llama "Turnos_Masivos..."
-                    // Priorizamos la hoja activa (primera)
-                    const sheetName = workbook.SheetNames[0];
-                    const worksheet = workbook.Sheets[sheetName];
-                    
-                    // Convertir a Array de Arrays (header:1) para control total
-                    const rawData = XLSX.utils.sheet_to_json(worksheet, {header: 1, defval: ""});
-                    
-                    processData(rawData);
-                } catch (err) {
-                    console.error(err);
-                    statusMsg.textContent = "Error: El archivo no es válido o está corrupto.";
-                    statusMsg.style.color = "red";
-                }
-            };
-            reader.readAsArrayBuffer(file);
-        }
-
-        // --- Lógica de Extracción Específica (Basada en tu archivo) ---
-        function processData(rows) {
-            DATABASE = [];
-            let headerIndex = -1;
-
-            // 1. Buscar la fila de cabecera real
-            for (let i = 0; i < Math.min(50, rows.length); i++) {
-                const rowStr = rows[i].join(" ").toLowerCase();
-                // Buscamos "Código Banner" y "Código Sócrates" para estar seguros
-                if (rowStr.includes("banner") && rowStr.includes("socrates")) {
-                    headerIndex = i;
+            // 2. Buscar la fila de cabecera que contenga "Código Banner"
+            let headerRowIndex = -1;
+            for(let i=0; i < Math.min(rows.length, 50); i++) {
+                const rowStr = rows[i].join("||").toLowerCase();
+                // Verificamos "banner" y "turno" para asegurarnos que es la hoja correcta
+                if(rowStr.includes("banner") && rowStr.includes("turno")) {
+                    headerRowIndex = i;
                     break;
                 }
             }
 
-            if (headerIndex === -1) {
-                statusMsg.textContent = "Error: No se encontró la estructura 'Turnos Masivos' en este archivo.";
-                statusMsg.style.color = "var(--upc-red)";
-                return;
-            }
+            if (headerRowIndex !== -1) {
+                foundSheet = true; // Marcamos que encontramos la hoja
+                const headers = rows[headerRowIndex].map(h => h.toString().trim().toLowerCase());
 
-            // 2. Identificar columnas dinámicamente en la fila header
-            const headerRow = rows[headerIndex].map(cell => cell.toString().toLowerCase().trim());
-            
-            const colBanner = headerRow.findIndex(h => h.includes("banner"));
-            const colSocrates = headerRow.findIndex(h => h.includes("socrates"));
-            
-            // Indices para Planificación (PH)
-            // En el archivo suele ser: Turno, Día, Hora (primer bloque)
-            let colTurnoPH = headerRow.indexOf("turno");
-            
-            // Indices para Matrícula
-            // En el archivo suele ser: GRUPO, Día, Hora (segundo bloque)
-            let colGrupoMat = headerRow.indexOf("grupo");
+                // 3. Mapeo de columnas inteligente (por nombre)
+                const idxBanner = headers.findIndex(h => h.includes("código banner") || h.includes("banner"));
+                const idxSocrates = headers.findIndex(h => h.includes("código sócrates") || h.includes("sócrates"));
+                const idxNombres = headers.findIndex(h => h.includes("nombres"));
+                const idxPaterno = headers.findIndex(h => h.includes("paterno"));
+                const idxMaterno = headers.findIndex(h => h.includes("materno"));
 
-            // Si falla la búsqueda exacta de índice, usamos posiciones fijas observadas en tu archivo
-            // Si el header es: Unidad(0), Periodo(1), Banner(2), Socrates(3), Pat(4), Mat(5), Nom(6), TurnoPH(7), DiaPH(8), HoraPH(9)... GrupoMat(11), DiaMat(12), HoraMat(13)
-            if (colBanner === -1) { /* fallback */ } 
+                // Clave: Buscar "Turno" y "Grupo" para definir las secciones
+                const idxTurnoPH = headers.indexOf("turno"); // Primera vez que aparece "Turno"
+                const idxGrupoMat = headers.indexOf("grupo"); // Primera vez que aparece "Grupo"
 
-            // 3. Iterar datos
-            let count = 0;
-            for (let i = headerIndex + 1; i < rows.length; i++) {
-                const row = rows[i];
-                if (!row || row.length < 5) continue;
+                // Definir "Día" y "Hora" basados en su vecino inmediato
+                // En tu archivo: [Turno] [Día] [Hora] ... [Grupo] [Día] [Hora]
+                const idxDiaPH = idxTurnoPH + 1;
+                const idxHoraPH = idxTurnoPH + 2;
 
-                // Extracción segura
-                const codigoU = row[colSocrates] ? row[colSocrates].toString().trim().toUpperCase() : "";
-                const codigoN = row[colBanner] ? row[colBanner].toString().trim().toUpperCase() : "";
+                const idxDiaMat = idxGrupoMat + 1;
+                const idxHoraMat = idxGrupoMat + 2;
 
-                if (codigoU || codigoN) {
-                    // Reconstrucción de nombre
-                    const paterno = row[4] || "";
-                    const materno = row[5] || "";
-                    const nombres = row[6] || "";
-                    const fullName = `${nombres} ${paterno} ${materno}`.trim();
+                // 4. Leer Datos
+                for(let r = headerRowIndex + 1; r < rows.length; r++) {
+                    const row = rows[r];
+                    if(!row || row.length < 5) continue;
 
-                    // Datos PH (Indices fijos relativos detectados visualmente en tu ejemplo)
-                    // Asumimos estructura estándar si se encontró el header
-                    // Ajuste: si usamos indices detectados:
-                    const phTurno = row[colTurnoPH] || "-";
-                    const phDia = row[colTurnoPH + 1] || "-";
-                    const phHora = row[colTurnoPH + 2] || "-";
+                    const codeB = row[idxBanner] ? String(row[idxBanner]).trim().toUpperCase() : "";
+                    const codeS = row[idxSocrates] ? String(row[idxSocrates]).trim().toUpperCase() : "";
 
-                    const matGrupo = row[colGrupoMat] || "-";
-                    const matDia = row[colGrupoMat + 1] || "-";
-                    const matHora = row[colGrupoMat + 2] || "-";
+                    if(codeB || codeS) {
+                        const fullName = `${row[idxNombres] || ''} ${row[idxPaterno] || ''} ${row[idxMaterno] || ''}`.trim();
 
-                    // Guardar registro
-                    const record = {
-                        fullName: fullName,
-                        codes: `${codigoU} / ${codigoN}`,
-                        ph: { turno: phTurno, dia: formatDate(phDia), hora: formatTime(phHora) },
-                        mat: { grupo: matGrupo, dia: formatDate(matDia), hora: formatTime(matHora) }
-                    };
+                        const record = {
+                            nombre: fullName,
+                            codes: `${codeS} | ${codeB}`,
+                            // Planificación
+                            ph_turno: row[idxTurnoPH],
+                            ph_dia: formatExcelDate(row[idxDiaPH]),
+                            ph_hora: formatExcelTime(row[idxHoraPH]),
+                            // Matrícula
+                            mat_grupo: row[idxGrupoMat],
+                            mat_dia: formatExcelDate(row[idxDiaMat]),
+                            mat_hora: formatExcelTime(row[idxHoraMat])
+                        };
 
-                    if (codigoU) DATABASE[codigoU] = record;
-                    if (codigoN) DATABASE[codigoN] = record;
-                    count++;
+                        if(codeB) STUDENT_DB[codeB] = record;
+                        if(codeS) STUDENT_DB[codeS] = record;
+                        count++;
+                    }
                 }
             }
-
-            // UI Feedback
-            statusMsg.textContent = `¡Listo! Se cargaron ${count} estudiantes correctamente.`;
-            statusMsg.style.color = "green";
-            
-            // Animación de transición
-            setTimeout(() => {
-                document.getElementById('card-upload').style.display = 'none';
-                document.getElementById('card-search').classList.remove('hidden');
-            }, 1000);
-        }
-
-        // --- Búsqueda ---
-        function performSearch() {
-            const input = document.getElementById('search-input');
-            const code = input.value.trim().toUpperCase();
-            const resultsArea = document.getElementById('results-area');
-            const searchStatus = document.getElementById('search-status');
-
-            if (!code) return;
-
-            const data = DATABASE[code];
-
-            if (data) {
-                // Llenar datos
-                document.getElementById('res-name').textContent = data.fullName;
-                document.getElementById('res-codes').textContent = data.codes;
-                
-                // Matrícula
-                document.getElementById('res-mat-group').textContent = data.mat.grupo;
-                document.getElementById('res-mat-date').textContent = data.mat.dia;
-                document.getElementById('res-mat-time').textContent = data.mat.hora;
-                
-                // PH
-                document.getElementById('res-ph-turn').textContent = data.ph.turno;
-                document.getElementById('res-ph-date').textContent = data.ph.dia;
-                document.getElementById('res-ph-time').textContent = data.ph.hora;
-
-                resultsArea.classList.remove('hidden');
-                searchStatus.textContent = "";
-            } else {
-                resultsArea.classList.add('hidden');
-                searchStatus.innerHTML = `<span style="color:var(--upc-red)"><i class="fas fa-exclamation-circle"></i> No se encontró el código <strong>${code}</strong> en la base de datos cargada.</span>`;
-            }
-        }
-
-        // Helpers de formato (Fechas Excel a Texto)
-        function formatDate(val) {
-            if (!val) return "-";
-            // Si viene como número de Excel (ej: 45200)
-            if (typeof val === 'number') {
-                const date = XLSX.SSF.parse_date_code(val);
-                return `${date.d}/${date.m}/${date.y}`;
-            }
-            // Si viene como texto con hora "viernes 9/01/2026"
-            if (val.toString().includes("/")) return val;
-            return val;
-        }
-
-        function formatTime(val) {
-            if (!val) return "-";
-            if (typeof val === 'number') { // Decimal de excel (0.5 = 12:00)
-                let totalSeconds = Math.floor(val * 86400);
-                let hours = Math.floor(totalSeconds / 3600);
-                let minutes = Math.floor((totalSeconds % 3600) / 60);
-                return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
-            }
-            return val;
-        }
-
-        // Enter para buscar
-        document.getElementById('search-input').addEventListener('keypress', function (e) {
-            if (e.key === 'Enter') performSearch();
         });
 
-    </script>
+        if(count > 0) {
+            document.getElementById('step-upload').classList.add('hidden');
+            document.getElementById('step-search').classList.remove('hidden');
+            document.getElementById('step-search').classList.add('fade-in');
+        } else {
+            alert("No se encontró la estructura de datos correcta en ninguna pestaña del Excel.\nPor favor verifica que el archivo contenga las columnas 'Código Banner', 'Turno' y 'GRUPO'.");
+            document.getElementById('file-name-display').textContent = "";
+        }
+    }
+
+    // --- BÚSQUEDA ---
+    function searchStudent() {
+        const input = document.getElementById('student-code');
+        const code = input.value.trim().toUpperCase();
+        const errorMsg = document.getElementById('search-error');
+        const container = document.getElementById('result-container');
+
+        if(!code) return;
+
+        const data = STUDENT_DB[code];
+
+        if(data) {
+            errorMsg.style.display = 'none';
+            container.classList.remove('hidden');
+            container.innerHTML = `
+                <div class="card fade-in">
+                    <div class="student-header">
+                        <div class="student-name">${data.nombre}</div>
+                        <div class="student-codes"><i class="fa-solid fa-id-card"></i> ${data.codes}</div>
+                    </div>
+
+                    <div class="info-grid">
+                        <div class="info-box mat">
+                            <div class="box-title red"><i class="fa-solid fa-calendar-check"></i> Matrícula Regular</div>
+                            
+                            <div class="data-point">
+                                <span class="label">GRUPO / PRIORIDAD</span>
+                                <span class="value big" style="color:var(--upc-red)">${data.mat_grupo || '-'}</span>
+                            </div>
+                            <div class="data-point">
+                                <span class="label">FECHA ASIGNADA</span>
+                                <span class="value">${data.mat_dia || '-'}</span>
+                            </div>
+                             <div class="data-point">
+                                <span class="label">HORA DE INICIO</span>
+                                <span class="value">${data.mat_hora || '-'}</span>
+                            </div>
+                        </div>
+
+                        <div class="info-box ph">
+                            <div class="box-title dark"><i class="fa-solid fa-list-ol"></i> Planificación Horaria</div>
+                            
+                            <div class="data-point">
+                                <span class="label">TURNO DE PLANIFICACIÓN</span>
+                                <span class="value big">${data.ph_turno || '-'}</span>
+                            </div>
+                            <div class="data-point">
+                                <span class="label">FECHA</span>
+                                <span class="value">${data.ph_dia || '-'}</span>
+                            </div>
+                             <div class="data-point">
+                                <span class="label">HORA</span>
+                                <span class="value">${data.ph_hora || '-'}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        } else {
+            container.classList.add('hidden');
+            errorMsg.textContent = `No se encontró el código ${code} en el archivo cargado.`;
+            errorMsg.style.display = 'block';
+        }
+    }
+
+    // --- HELPERS FORMATO ---
+    function formatExcelDate(serial) {
+        if(!serial) return "-";
+        // Si ya es texto (ej: "viernes 9/01/2026")
+        if(String(serial).includes("/")) return serial;
+        // Si es número serial de Excel
+        if(!isNaN(serial)) {
+            const date = XLSX.SSF.parse_date_code(serial);
+            return `${date.d}/${date.m}/${date.y}`;
+        }
+        return serial;
+    }
+
+    function formatExcelTime(serial) {
+        if(!serial) return "-";
+        // Si es decimal (0.5 = 12:00)
+        if(typeof serial === 'number' && serial < 1) {
+            const totalSeconds = Math.floor(serial * 86400);
+            const hours = Math.floor(totalSeconds / 3600);
+            const minutes = Math.floor((totalSeconds % 3600) / 60);
+            const pad = (n) => n < 10 ? '0'+n : n;
+            return `${pad(hours)}:${pad(minutes)}`;
+        }
+        return serial;
+    }
+
+    function resetApp() {
+        location.reload();
+    }
+
+    // Enter Key
+    document.getElementById('student-code').addEventListener('keypress', function (e) {
+        if (e.key === 'Enter') searchStudent();
+    });
+
+</script>
 </body>
 </html>
